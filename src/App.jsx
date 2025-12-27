@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole} from './firebase.js';
 import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
@@ -10,6 +10,7 @@ import Home from './home.jsx';
 function App() {
   // Auth state
   const [user, setUser] = useState(null);
+  const [role, setRole] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState(null);
@@ -44,6 +45,16 @@ function App() {
     return () => unsub();
   }, []);
 
+  useEffect(() => {
+        const fetchRole = async () => {
+            if (user) {
+                const userRole = await getRole(user.uid);
+                setRole(userRole);
+            }
+        };
+        fetchRole();
+    }, [user]);
+
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError(null);
@@ -73,7 +84,7 @@ function App() {
       <nav>
         <Link to="/">Song Chart</Link> |{" "}
         <Link to="/about">About</Link> |{" "}
-        <Link to="/artist-registration">Artist Registration</Link> |{" "}
+        {role != 'artist' && <><Link to="/artist-registration">Artist Registration</Link> |{" "}</>}
         <Link to="/contact">Contact</Link>
       </nav>
 

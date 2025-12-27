@@ -102,7 +102,27 @@ const registerWithEmail = async (email, password) => {
   }
 }
 
+const fanToArtist = async () => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No authenticated user');
+  const userRef = doc(db, 'users', user.uid);
+  try {
+    await updateDoc(userRef, { role: 'artist' });
+  } catch (err) {
+    console.error('Error upgrading user to artist:', err);
+    throw err;
+  }
+}
 
+const getRole = async (uid) => {
+  const userRef = doc(db, 'users', uid);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    return userSnap.data().role;
+  } else {
+    return null;
+  }
+}
 
 const loginWithEmail = async (email, password) => {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -125,4 +145,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtist, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset };
+export { getSong, getAllSongs, getArtist, getRole, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
