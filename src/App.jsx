@@ -1,0 +1,133 @@
+import { useEffect, useState } from 'react';
+import './App.css'
+import Song from './song.jsx';
+import {getAllSongs, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset} from './firebase.js';
+
+
+function App() {
+  const [songs, setSongs] = useState([]); 
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  // Auth state
+  const [user, setUser] = useState(null);
+  const [authEmail, setAuthEmail] = useState('');
+  const [authPassword, setAuthPassword] = useState('');
+  const [authError, setAuthError] = useState(null);
+  const [isRegister, setIsRegister] = useState(false);
+
+  // Forgot password state
+  const [resetMode, setResetMode] = useState(false);
+  const [resetEmail, setResetEmail] = useState('');
+  const [resetStatus, setResetStatus] = useState(null);
+
+  const handleSendReset = async () => {
+    setResetStatus(null);
+    setAuthError(null);
+    const email = resetEmail || authEmail;
+    if (!email) {
+      setResetStatus('Please enter an email address');
+      return;
+    }
+    try {
+      await sendPasswordReset(email);
+      setResetStatus('Password reset email sent. Check your inbox.');
+    } catch (err) {
+      setResetStatus(err.message || 'Error sending reset email');
+    }
+  }
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    getAllSongs()
+      .then(s => { if (!cancelled) setSongs(s) })
+      .catch(err => { if (!cancelled) setError(err.message || 'Error fetching songs') })
+      .finally(() => { if (!cancelled) setLoading(false) });
+
+    return () => { cancelled = true };
+
+  }, []);
+
+  useEffect(() => {
+    const unsub = subscribeAuth((u) => {
+      setUser(u);
+    });
+    return () => unsub();
+  }, []);
+
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthError(null);
+    try {
+      if (isRegister) {
+        await registerWithEmail(authEmail, authPassword);
+      } else {
+        await loginWithEmail(authEmail, authPassword);
+      }
+      setAuthPassword('');
+    } catch (err) {
+      setAuthError(err.message || 'Authentication error');
+    }
+  }
+
+  const handleSignOut = async () => {
+    try {
+      await signOutUser();
+    } catch (err) {
+      console.error('Sign out error', err);
+    }
+  }
+
+  return (
+    <>
+      <h1>Song chart</h1>
+
+      {/* Auth UI */}
+      <div style={{ marginBottom: 16 }}>
+        {user ? (
+          <div>
+            <p>Signed in as <strong>{user.email}</strong></p>
+            <button onClick={handleSignOut}>Sign out</button>
+          </div>
+        ) : (
+          <div>
+            <form onSubmit={handleAuthSubmit} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+              <input value={authEmail} onChange={(e) => setAuthEmail(e.target.value)} placeholder="Email" />
+              <input type="password" value={authPassword} onChange={(e) => setAuthPassword(e.target.value)} placeholder="Password" />
+              <button type="submit">{isRegister ? 'Register' : 'Sign in'}</button>
+            </form>
+            <div style={{ marginTop: 8 }}>
+              <button onClick={() => setIsRegister(prev => !prev)}>{isRegister ? 'Switch to Sign in' : 'Switch to Register'}</button>
+              {authError && <p style={{ color: 'red' }}>Error: {authError}</p>}
+
+              <div style={{ marginTop: 8 }}>
+                {resetMode ? (
+                  <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                    <input placeholder="Email for password reset" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} />
+                    <button onClick={handleSendReset}>Send reset email</button>
+                    <button onClick={() => { setResetMode(false); setResetStatus(null); setResetEmail(''); }}>Cancel</button>
+                  </div>
+                ) : (
+                  <button onClick={() => setResetMode(true)}>Forgot password?</button>
+                )}
+                {resetStatus && <p style={{ color: resetStatus.startsWith('Password reset email sent') ? 'green' : 'red' }}>{resetStatus}</p>}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {loading && <p>Loading…</p>}
+      {error && <p>Error: {error}</p>}
+      {!loading && !error && songs.length === 0 && <p>No songs found</p>}
+      {!loading && !error && songs.map((song) => (
+        <Song key={song.id} audioUrl={song.audioUrl} artist={song.artist ?? 'Unknown artist'} title={song.title  ?? 'Unknown title'} />
+      ))}
+    </>
+  )
+}
+
+export default App
