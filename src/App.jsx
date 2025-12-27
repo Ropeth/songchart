@@ -1,14 +1,12 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState } from 'react';
+import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import Song from './song.jsx';
-import {getAllSongs, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset} from './firebase.js';
-
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset} from './firebase.js';
+import Contact from './contact.jsx';
+import About from './about.jsx';
+import Home from './home.jsx';
 
 function App() {
-  const [songs, setSongs] = useState([]); 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
   // Auth state
   const [user, setUser] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
@@ -21,31 +19,6 @@ function App() {
   const [resetEmail, setResetEmail] = useState('');
   const [resetStatus, setResetStatus] = useState(null);
 
-  // Playing state and audio refs (ensure only one song plays at a time)
-  const [playingSongId, setPlayingSongId] = useState(null);
-  const audioRefs = useRef({});
-
-  const registerAudioRef = (id, el) => {
-    if (el) {
-      audioRefs.current[id] = el;
-    } else {
-      delete audioRefs.current[id];
-    }
-  };
-
-  const handlePlay = (id) => {
-    setPlayingSongId(id);
-    // pause any other audio elements
-    Object.entries(audioRefs.current).forEach(([key, audioEl]) => {
-      if (String(key) !== String(id) && audioEl && !audioEl.paused) {
-        audioEl.pause();
-      }
-    });
-  };
-
-  const handlePause = (id) => {
-    setPlayingSongId(prev => (prev === id ? null : prev));
-  };
 
   const handleSendReset = async () => { 
     setResetStatus(null);
@@ -62,20 +35,6 @@ function App() {
       setResetStatus(err.message || 'Error sending reset email');
     }
   }
-
-  useEffect(() => {
-    let cancelled = false;
-    setLoading(true);
-    setError(null);
-
-    getAllSongs()
-      .then(s => { if (!cancelled) setSongs(s) })
-      .catch(err => { if (!cancelled) setError(err.message || 'Error fetching songs') })
-      .finally(() => { if (!cancelled) setLoading(false) });
-
-    return () => { cancelled = true };
-
-  }, []);
 
   useEffect(() => {
     const unsub = subscribeAuth((u) => {
@@ -108,8 +67,21 @@ function App() {
   }
 
   return (
-    <>
+    <BrowserRouter>
+    {/* Navigation */}
       <h1>Song chart</h1>
+      <nav>
+        <Link to="/">Home</Link> |{" "}
+        <Link to="/about">About</Link> |{" "}
+        <Link to="/contact">Contact</Link>
+      </nav>
+
+      {/* Routes */}
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
 
       {/* Auth UI */}
       <div style={{ marginBottom: 16 }}>
@@ -146,23 +118,8 @@ function App() {
         )}
       </div>
 
-      {loading && <p>Loading…</p>}
-      {error && <p>Error: {error}</p>}
-      {!loading && !error && songs.length === 0 && <p>No songs found</p>}
-      {!loading && !error && songs.map((song) => (
-        <Song
-          key={song.id}
-          id={song.id}
-          audioUrl={song.audioUrl}
-          artist={song.artist ?? 'Unknown artist'}
-          title={song.title ?? 'Unknown title'}
-          isPlaying={playingSongId === song.id}
-          onPlay={() => handlePlay(song.id)}
-          onPause={() => handlePause(song.id)}
-          registerAudioRef={(el) => registerAudioRef(song.id, el)}
-        />
-      ))}
-    </>
+      
+    </BrowserRouter>
   )
 }
 
