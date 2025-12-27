@@ -46,3 +46,20 @@
   height: 100px;
   width: 100px;
 }
+
+.songbox.playing {
+  outline: 3px solid rgba(29,185,84,0.85); /* subtle green outline for playing */
+  box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.playing-badge {
+  display: inline-block;
+  margin-top: 8px;
+  padding: 4px 8px;
+  background: #1db954;
+  color: white;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.85rem;
+}
+
