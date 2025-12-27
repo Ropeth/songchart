@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, collection, setDoc, getDoc, updateDoc, getDocs } from "firebase/firestore"; 
+import { getFirestore, doc, collection, setDoc, getDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 
@@ -36,6 +36,7 @@ const app = initializeApp(firebaseConfig);
 
 // Initialize Firestore and export it
 const db = getFirestore(app);
+
 const getSong = async (songId) => {
   const songRef = doc(db, "songs", songId);
   const songSnap = await getDoc(songRef);
@@ -45,6 +46,7 @@ const getSong = async (songId) => {
     return null;
   }
 }
+
 const getAllSongs = async () => {
   try {
     const songsCol = collection(db, "songs");
@@ -62,6 +64,7 @@ const getAllSongs = async () => {
     throw err;
   }
 }
+
 const getArtist = async (artistId) => {
   const artistRef = doc(db, "artists", artistId);
   const artistSnap = await getDoc(artistRef);
@@ -71,15 +74,32 @@ const getArtist = async (artistId) => {
     return null;
   }
 }
+
 export const storage = getStorage(app);
 
 // Firebase Authentication helpers
 const auth = getAuth(app);
 
 const registerWithEmail = async (email, password) => {
-  const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-  return userCredential.user;
-  //create user document in users collection
+  try {
+    const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+    const user = userCredential.user;
+    // create user document in users collection with role 'fan'
+    try {
+      await setDoc(doc(db, 'users', user.uid), {
+        email: user.email,
+        role: 'fan',
+        createdAt: serverTimestamp()
+      });
+    } catch (err) {
+      console.error('Error creating user document:', err);
+      throw err;
+    }
+    return user;
+  } catch (err) {
+    console.error('Registration error:', err.code, err.message);
+    throw err;
+  }
 }
 
 

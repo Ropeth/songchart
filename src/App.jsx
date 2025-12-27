@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
 import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset} from './firebase.js';
 import Contact from './contact.jsx';
+import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
 import Home from './home.jsx';
 
@@ -69,10 +70,10 @@ function App() {
   return (
     <BrowserRouter>
     {/* Navigation */}
-      <h1>Song chart</h1>
       <nav>
-        <Link to="/">Home</Link> |{" "}
+        <Link to="/">Song Chart</Link> |{" "}
         <Link to="/about">About</Link> |{" "}
+        <Link to="/artist-registration">Artist Registration</Link> |{" "}
         <Link to="/contact">Contact</Link>
       </nav>
 
@@ -80,6 +81,7 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
+        <Route path="/artist-registration" element={<ArtistRegistration />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
 
