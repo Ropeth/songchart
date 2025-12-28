@@ -62,6 +62,7 @@ export default function Home() {
           id={song.id}
           audioUrl={song.audioUrl}
           artist={song.artist ?? 'Unknown artist'}
+          artistId={song.artistId}
           title={song.title ?? 'Unknown title'}
           isPlaying={playingSongId === song.id}
           onPlay={() => handlePlay(song.id)}

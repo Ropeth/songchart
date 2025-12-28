@@ -55,7 +55,7 @@ const getAllSongs = async () => {
     const songListWithArtists = await Promise.all(
         songList.map(async (song) => ({
             ...song,
-            artist: await getArtist(song.artistId)
+            artist: await getArtistName(song.artistId)
         }))
     );
     return songListWithArtists; return songList;
@@ -65,7 +65,7 @@ const getAllSongs = async () => {
   }
 }
 
-const getArtist = async (artistId) => {
+const getArtistName = async (artistId) => {
   const artistRef = doc(db, "artists", artistId);
   const artistSnap = await getDoc(artistRef);
   if (artistSnap.exists()) {
@@ -74,7 +74,15 @@ const getArtist = async (artistId) => {
     return null;
   }
 }
-
+const getArtist = async (artistId) => {
+  const artistRef = doc(db, "artists", artistId);
+  const artistSnap = await getDoc(artistRef);
+  if (artistSnap.exists()) {
+    return artistSnap.data();
+  } else {
+    return null;
+  }
+}
 export const storage = getStorage(app);
 
 const uploadImage = async (file, path) => {
@@ -117,6 +125,17 @@ const fanToArtist = async () => {
     throw err;
   }
 }
+
+const updateArtist = async (artistId, data) => {
+  const artistRef = doc(db, 'artists', artistId); 
+  try {
+    await updateDoc(artistRef, data);
+  } catch (err) {
+    console.error('Error updating artist document:', err);
+    throw err;
+  }
+}
+
 
 // Firebase Authentication helpers
 const auth = getAuth(app);
@@ -184,4 +203,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtist, createArtist, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtistName, getArtist, createArtist, updateArtist, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };

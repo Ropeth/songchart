@@ -5,13 +5,14 @@ import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPassw
 import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
+import ArtistAccount from './artist-account.jsx';
 import Home from './home.jsx';
 
 function App() {
   // Auth state
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
-  const [artist, setArtist] = useState(null);
+  const [myArtist, setMyArtist] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState(null);
@@ -57,15 +58,15 @@ function App() {
   }, [user]);
 
   useEffect(() => {
-    const fetchArtist = async () => {
+    const fetchMyArtist = async () => {
       if(user){
-        const artistData = await getArtistByUser(user.uid);
-        setArtist(artistData || null);
+        const myArtistData = await getArtistByUser(user.uid);
+        setMyArtist(myArtistData || null);
       }else{
-        setArtist(null);
+        setMyArtist(null);
       }
     }
-    fetchArtist();
+    fetchMyArtist();
   }, [user]);
 
   // Auth form submit handler
@@ -108,11 +109,12 @@ function App() {
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
+        <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
       </Routes>
 
       {/* Auth UI */}
       <div style={{ marginBottom: 16 }}>
-        {artist && <p>Artist: {artist.name}</p>}
+        {myArtist && <p>Artist: {myArtist.name}</p>}
         {user ? (
           <div>
             <p>Signed in as <strong>{user.email}</strong></p>
