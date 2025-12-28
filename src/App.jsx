@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser} from './firebase.js';
 import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
@@ -11,6 +11,7 @@ function App() {
   // Auth state
   const [user, setUser] = useState(null);
   const [role, setRole] = useState(null);
+  const [artist, setArtist] = useState(null);
   const [authEmail, setAuthEmail] = useState('');
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState(null);
@@ -46,15 +47,28 @@ function App() {
   }, []);
 
   useEffect(() => {
-        const fetchRole = async () => {
-            if (user) {
-                const userRole = await getRole(user.uid);
-                setRole(userRole);
-            }
-        };
-        fetchRole();
-    }, [user]);
+      const fetchRole = async () => {
+          if (user) {
+              const userRole = await getRole(user.uid);
+              setRole(userRole);
+          }
+      };
+      fetchRole();
+  }, [user]);
 
+  useEffect(() => {
+    const fetchArtist = async () => {
+      if(user){
+        const artistData = await getArtistByUser(user.uid);
+        setArtist(artistData || null);
+      }else{
+        setArtist(null);
+      }
+    }
+    fetchArtist();
+  }, [user]);
+
+  // Auth form submit handler
   const handleAuthSubmit = async (e) => {
     e.preventDefault();
     setAuthError(null);
@@ -92,15 +106,17 @@ function App() {
       <Routes>
         <Route path="/" element={<Home />} />
         <Route path="/about" element={<About />} />
-        <Route path="/artist-registration" element={<ArtistRegistration />} />
+        <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
       </Routes>
 
       {/* Auth UI */}
       <div style={{ marginBottom: 16 }}>
+        {artist && <p>Artist: {artist.name}</p>}
         {user ? (
           <div>
             <p>Signed in as <strong>{user.email}</strong></p>
+            <p>Role: {role}</p>
             <button onClick={handleSignOut}>Sign out</button>
           </div>
         ) : (

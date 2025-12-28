@@ -77,6 +77,35 @@ const getArtist = async (artistId) => {
 
 export const storage = getStorage(app);
 
+
+const getRole = async (uid) => {
+  const userRef = doc(db, 'users', uid);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    return userSnap.data().role;
+  } else {
+    return null;
+  }
+}
+const getArtistByUser = async (uid) => {
+  const artistCol = collection(db, 'artists');
+  const artistSnapshot = await getDocs(artistCol);
+  const artistList = artistSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  return artistList.find(artist => artist.userId === uid);
+}
+
+const fanToArtist = async () => {
+  const user = auth.currentUser;
+  if (!user) throw new Error('No authenticated user');
+  const userRef = doc(db, 'users', user.uid);
+  try {
+    await updateDoc(userRef, { role: 'artist' });
+  } catch (err) {
+    console.error('Error upgrading user to artist:', err);
+    throw err;
+  }
+}
+
 // Firebase Authentication helpers
 const auth = getAuth(app);
 
@@ -102,27 +131,24 @@ const registerWithEmail = async (email, password) => {
   }
 }
 
-const fanToArtist = async () => {
-  const user = auth.currentUser;
-  if (!user) throw new Error('No authenticated user');
-  const userRef = doc(db, 'users', user.uid);
+const createArtist = async (artistName, bio, uid) => {
+  console.log("create artist for user", uid);
+  console.log(artistName, bio);
+  //TODO test this
   try {
-    await updateDoc(userRef, { role: 'artist' });
+    const artistRef = await setDoc(doc(db, 'artists', uid), {
+      name: artistName,
+      bio: bio,
+      userId: uid,
+      createdAt: serverTimestamp()
+    });
+    return artistRef;
   } catch (err) {
-    console.error('Error upgrading user to artist:', err);
+    console.error('Error creating artist document:', err);
     throw err;
   }
 }
 
-const getRole = async (uid) => {
-  const userRef = doc(db, 'users', uid);
-  const userSnap = await getDoc(userRef);
-  if (userSnap.exists()) {
-    return userSnap.data().role;
-  } else {
-    return null;
-  }
-}
 
 const loginWithEmail = async (email, password) => {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -145,4 +171,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtist, getRole, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtist, createArtist,getRole, getArtistByUser, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
