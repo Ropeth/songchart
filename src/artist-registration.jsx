@@ -1,12 +1,15 @@
-import { useState, useEffect, use } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {subscribeAuth, fanToArtist, getRole, createArtist} from './firebase.js';
+import {subscribeAuth, fanToArtist, getRole, createArtist, uploadImage} from './firebase.js';
 
 
 
 export default function ArtistRegistration({role, setRole, user, setUser}) {
     const [artistName, setArtistName] = useState('');
     const [artistLocation, setArtistLocation] = useState('');
+    const [artistImageUrl, setArtistImageUrl] = useState(''); // final uploaded URL
+    const [artistImageFile, setArtistImageFile] = useState(null);
+    const [artistImagePreview, setArtistImagePreview] = useState('');
     const [artistBio, setArtistBio] = useState('');
     const [authError, setAuthError] = useState(null);
 
@@ -16,6 +19,14 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
       });
       return () => unsub();
     }, []);
+
+    useEffect(() => {
+      return () => {
+        if (artistImagePreview) {
+          URL.revokeObjectURL(artistImagePreview);
+        }
+      };
+    }, [artistImagePreview]);
 
     const fetchRole = async () => {
         if (user) {
@@ -34,7 +45,15 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
     setAuthError(null);
       try {
         await fanToArtist();
-        await createArtist(artistName, artistBio, artistLocation, user.uid);
+        let uploadedImageUrl = '';
+        if (artistImageFile) {
+          // upload to Firebase Storage
+          uploadedImageUrl = await uploadImage(artistImageFile, `artists/${user.uid}/${Date.now()}_${artistImageFile.name}`);
+          setArtistImageUrl(uploadedImageUrl);
+          setArtistImagePreview('');
+        }
+        // Note: createArtist expects (name, bio, location, imageUrl, uid)
+        await createArtist(artistName, artistBio, artistLocation, uploadedImageUrl, user.uid);
         fetchRole();
         alert('Your account has been upgraded to an artist account!');
       } catch (err) {
@@ -195,6 +214,19 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
                           </optgroup>
                         </select>
                         <textarea value={artistBio} onChange={(e) => setArtistBio(e.target.value)} placeholder="Artist bio *" rows="7" cols="50" required/>
+                          <input type="file" accept="image/*" onChange={(e) => {
+                            const file = e.target.files[0];
+                            setArtistImageFile(file);
+                            if (file) {
+                              const preview = URL.createObjectURL(file);
+                              setArtistImagePreview(preview);
+                              setArtistImageUrl('');
+                            } else {
+                              setArtistImagePreview('');
+                            }
+                          }} />
+                          {artistImagePreview && <img src={artistImagePreview} alt="Preview" style={{maxWidth: '200px', display:'block', marginTop:8}} />}
+                          {artistImageUrl && !artistImagePreview && <img src={artistImageUrl} alt="Artist" style={{maxWidth: '200px', display:'block', marginTop:8}} />}
                         <button type="submit">Make me an artist</button>
                       </form>
                       {authError && <p style={{ color: 'red' }}>Error: {authError}</p>}

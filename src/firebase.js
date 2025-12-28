@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, collection, setDoc, getDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -77,6 +77,18 @@ const getArtist = async (artistId) => {
 
 export const storage = getStorage(app);
 
+const uploadImage = async (file, path) => {
+  if (!file) throw new Error('No file provided for upload');
+  try {
+    const storageRef = ref(storage, path);
+    await uploadBytes(storageRef, file);
+    const url = await getDownloadURL(storageRef);
+    return url;
+  } catch (err) {
+    console.error('Error uploading file to storage:', err);
+    throw err;
+  }
+};
 
 const getRole = async (uid) => {
   const userRef = doc(db, 'users', uid);
@@ -131,7 +143,7 @@ const registerWithEmail = async (email, password) => {
   }
 }
 
-const createArtist = async (artistName, bio, artistLocation, uid) => {
+const createArtist = async (artistName, bio, artistLocation, artistImageUrl, uid) => {
   console.log("create artist for user", uid);
   console.log(artistName, bio, artistLocation);
   try {
@@ -139,6 +151,7 @@ const createArtist = async (artistName, bio, artistLocation, uid) => {
       name: artistName,
       location: artistLocation,
       bio: bio,
+      artistImageUrl: artistImageUrl,
       userId: uid,
       createdAt: serverTimestamp()
     });
@@ -171,4 +184,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtist, createArtist,getRole, getArtistByUser, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtist, createArtist, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
