@@ -1,16 +1,13 @@
 import { useState, useEffect, use } from 'react';
 import { Link } from 'react-router-dom';
-import {registerWithEmail, loginWithEmail, subscribeAuth, fanToArtist, getRole, createArtist} from './firebase.js';
+import {subscribeAuth, fanToArtist, getRole, createArtist} from './firebase.js';
 
 
 
 export default function ArtistRegistration({role, setRole, user, setUser}) {
     const [artistName, setArtistName] = useState('');
     const [artistBio, setArtistBio] = useState('');
-    const [authEmail, setAuthEmail] = useState('');
-    const [authPassword, setAuthPassword] = useState('');
     const [authError, setAuthError] = useState(null);
-    const [isRegister, setIsRegister] = useState(false);
 
     useEffect(() => {
       const unsub = subscribeAuth((u) => {
@@ -30,23 +27,10 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
       fetchRole();
     }, [user]);
 
-    const handleAuthSubmit = async (e) => {
-      e.preventDefault();
-      setAuthError(null);
-      try {
-        if (isRegister) {
-          await registerWithEmail(authEmail, authPassword);
-        } else {
-          await loginWithEmail(authEmail, authPassword);
-        }
-        setAuthPassword('');
-      } catch (err) {
-        setAuthError(err.message || 'Authentication error');
-      }
-    }
-
   
-    const upgradeToArtist = async () => {
+    const upgradeToArtist = async (e) => {
+    e.preventDefault();
+    setAuthError(null);
       try {
         await fanToArtist();
         await createArtist(artistName, artistBio , user.uid);
@@ -54,8 +38,10 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
         alert('Your account has been upgraded to an artist account!');
       } catch (err) {
         console.error('Could not upgrade to artist', err);
+        setAuthError(err.message || 'Error upgrading to artist');
       }
     }
+
 
     return (
     <>
@@ -76,17 +62,13 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
                     <p>You are currently signed in as a fan.</p>
                     <p>Would you like to upload your own songs? Complete the following info to upgrade to an artist account.</p>
                     <Link to="/">I don't want an artist account. Take me back to the chart.</Link>
-                    <input placeholder="Artist name" value={artistName} onChange={(e) => setArtistName(e.target.value)} required/>
-                    <input placeholder="Artist bio" value={artistBio} onChange={(e) => setArtistBio(e.target.value)} required/>
-                    {authError && <p style={{ color: 'red' }}>Error: {authError}</p>}
-                    <button onClick={() => {
-                        if (!artistName.trim() || !artistBio.trim()) {
-                            setAuthError('Please fill in all fields');
-                        } else {
-                            setAuthError(null);
-                            upgradeToArtist();
-                        }
-                    }}>Make me an artist</button>
+                      <form onSubmit={upgradeToArtist}>
+                        <input value={artistName} onChange={(e) => setArtistName(e.target.value)} placeholder="Artist name" required/>
+                        <textarea value={artistBio} onChange={(e) => setArtistBio(e.target.value)} placeholder="Artist bio" rows="7" cols="50" required/>
+                        <button type="submit">Make me an artist</button>
+                      </form>
+                      {authError && <p style={{ color: 'red' }}>Error: {authError}</p>}
+
                 </div>
                 )
             ) : (
