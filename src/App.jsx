@@ -6,6 +6,7 @@ import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
 import ArtistAccount from './artist-account.jsx';
+import ManageSongs from './manage-songs.jsx';
 import Home from './home.jsx';
 
 function App() {
@@ -101,6 +102,7 @@ function App() {
         <Link to="/about">About</Link> |{" "}
         {role != 'artist' && <><Link to="/artist-registration">Artist Registration</Link> |{" "}</>}
         {role === 'artist' && <><Link to="/artist-account">My Account</Link> |{" "}</>}
+        {role === 'artist' && <><Link to="/manage-songs">Manage Songs</Link> |{" "}</>}
         <Link to="/contact">Contact</Link>
       </nav>
 
@@ -111,6 +113,7 @@ function App() {
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
+        <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist}/>} />
       </Routes>
 
       {/* Auth UI */}

@@ -65,6 +65,26 @@ const getAllSongs = async () => {
   }
 }
 
+const getArtistSongs = async (artistId) => {
+  try {
+    const songsCol = collection(db, "songs");
+    const songSnapshot = await getDocs(songsCol);
+    const songList = songSnapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(song => song.artistId === artistId);
+    const songListWithArtists = await Promise.all(
+        songList.map(async (song) => ({
+            ...song,
+            artist: await getArtistName(song.artistId)
+        }))
+    );
+    return songListWithArtists; 
+  } catch (err) {
+    console.error('Error fetching songs:', err);
+    throw err;
+  }
+}
+
 const getArtistName = async (artistId) => {
   const artistRef = doc(db, "artists", artistId);
   const artistSnap = await getDoc(artistRef);
@@ -136,6 +156,16 @@ const updateArtist = async (artistId, data) => {
   }
 }
 
+const updateSong = async (songId, data) => {
+  const songRef = doc(db, 'songs', songId);
+  try {
+    await updateDoc(songRef, data);
+  } catch (err) {
+    console.error('Error updating song document:', err);
+    throw err;
+  }
+} 
+
 
 // Firebase Authentication helpers
 const auth = getAuth(app);
@@ -203,4 +233,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtistName, getArtist, createArtist, updateArtist, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
