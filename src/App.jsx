@@ -100,6 +100,7 @@ function App() {
         <Link to="/">Song Chart</Link> |{" "}
         <Link to="/about">About</Link> |{" "}
         {role != 'artist' && <><Link to="/artist-registration">Artist Registration</Link> |{" "}</>}
+        {role === 'artist' && <><Link to="/artist-account">My Account</Link> |{" "}</>}
         <Link to="/contact">Contact</Link>
       </nav>
 
