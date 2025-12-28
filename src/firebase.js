@@ -131,13 +131,13 @@ const registerWithEmail = async (email, password) => {
   }
 }
 
-const createArtist = async (artistName, bio, uid) => {
+const createArtist = async (artistName, bio, artistLocation, uid) => {
   console.log("create artist for user", uid);
-  console.log(artistName, bio);
-  //TODO test this
+  console.log(artistName, bio, artistLocation);
   try {
     const artistRef = await setDoc(doc(db, 'artists', uid), {
       name: artistName,
+      location: artistLocation,
       bio: bio,
       userId: uid,
       createdAt: serverTimestamp()
