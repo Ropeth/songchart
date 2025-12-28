@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import {getArtist, updateSong} from './firebase.js';
 
 
-export default function EditableSong({ id, title, artist, artistId, audioUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
+export default function EditableSong({ id, title, artist, artistId, audioUrl, isPlaying, onPlay, onPause, registerAudioRef, imageUrl }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
@@ -72,7 +72,7 @@ export default function EditableSong({ id, title, artist, artistId, audioUrl, is
       <audio ref={audioRef} controls src={localAudioUrl} style={{ width: "100%" }} onPlay={() => onPlay && onPlay()} onPause={() => onPause && onPause()}>
         Your browser does not support the audio element.
       </audio>
-      <img src={reactLogo} className="songpic" alt={localTitle}/>
+      <img src={imageUrl} className="songpic" alt={localTitle}/>
       <p onClick={getBio}>{artist}</p>
       {!editMode ? (
         <>

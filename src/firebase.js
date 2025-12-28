@@ -156,6 +156,27 @@ const updateArtist = async (artistId, data) => {
   }
 }
 
+const createSong = async ({ title, artistId, audioUrl, imageUrl } = {}) => {
+  if (!artistId) throw new Error('Missing artistId when creating song');
+  if (!title) throw new Error('Missing title when creating song');
+  try {
+    const songsCol = collection(db, 'songs');
+    // Create a new document with an auto-generated ID
+    const newSongRef = doc(songsCol);
+    await setDoc(newSongRef, {
+      title: title,
+      artistId: artistId,
+      audioUrl: audioUrl || '',
+      imageUrl: imageUrl || '',
+      createdAt: serverTimestamp()
+    });
+    return newSongRef.id;
+  } catch (err) {
+    console.error('Error creating song document:', err);
+    throw err;
+  }
+}
+
 const updateSong = async (songId, data) => {
   const songRef = doc(db, 'songs', songId);
   try {
@@ -233,4 +254,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };

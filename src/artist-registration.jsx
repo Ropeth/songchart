@@ -214,7 +214,7 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
                           </optgroup>
                         </select>
                         <textarea value={artistBio} onChange={(e) => setArtistBio(e.target.value)} placeholder="Artist bio *" rows="7" cols="50" required/>
-                          <input type="file" accept="image/*" onChange={(e) => {
+                        <input type="file" accept="image/*" onChange={(e) => {
                             const file = e.target.files[0];
                             setArtistImageFile(file);
                             if (file) {

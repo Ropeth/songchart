@@ -113,7 +113,7 @@ function App() {
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
-        <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist}/>} />
+        <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
       </Routes>
 
       {/* Auth UI */}

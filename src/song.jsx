@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import {getArtist} from './firebase.js';
 
 
-export default function Song({ id, title, artist, artistId, audioUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
+export default function Song({ id, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
@@ -46,7 +46,7 @@ export default function Song({ id, title, artist, artistId, audioUrl, isPlaying,
       <audio ref={audioRef} controls src={audioUrl} style={{ width: "100%" }} onPlay={() => onPlay && onPlay()} onPause={() => onPause && onPause()}>
         Your browser does not support the audio element.
       </audio>
-      <img src={reactLogo} className="songpic" alt={title}/>
+      <img src={imageUrl} className="songpic" alt={title}/>
       <p onClick={getBio}>{artist}</p>
       <p>{title}</p>
       {isPlaying && <span className='playing-badge'>Playing ▶</span>}

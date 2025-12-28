@@ -1,11 +1,18 @@
 import EditableSong from "./editable-song";
-import { useEffect, useState, useRef } from 'react';
-import {getArtistSongs} from './firebase.js';
+import {useEffect, useState, useRef } from 'react';
+import {uploadImage, getArtistSongs, createSong} from './firebase.js';
 
-export default function ManageSongs({ myArtist }) {
+export default function ManageSongs({ myArtist, user }) {
     const [songs, setSongs] = useState([]); 
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [songImageUrl, setSongImageUrl] = useState(''); // final uploaded URL
+    const [songImageFile, setSongImageFile] = useState(null);
+    const [songImagePreview, setSongImagePreview] = useState('');
+    const [newSongTitle, setNewSongTitle] = useState('');
+    const [addingSong, setAddingSong] = useState(false);
+    const [addSongError, setAddSongError] = useState(null);
+    
 
     // Playing state and audio refs (ensure only one song plays at a time)
     const [playingSongId, setPlayingSongId] = useState(null);
@@ -55,6 +62,45 @@ export default function ManageSongs({ myArtist }) {
 
     }, [myArtist?.id]);
 
+    const handleAddSong = async (e) => {
+        e.preventDefault();
+        setAddSongError(null);
+        setAddingSong(true);
+        try {
+            let uploadedImageUrl = '';  
+            if (songImageFile) {
+                // upload to Firebase Storage
+                console.log(`songs/${user.uid}/${Date.now()}_${songImageFile.name}`);
+                uploadedImageUrl = await uploadImage(songImageFile, `songs/${user.uid}/${Date.now()}_${songImageFile.name}`);
+                setSongImageUrl(uploadedImageUrl);
+                setSongImagePreview('');
+            }
+             console.log("Uploaded image URL:", uploadedImageUrl);
+            // console.log("Creating song with title:", newSongTitle);
+            // console.log("For artist ID:", myArtist.id);
+            await createSong({
+                title: newSongTitle,
+                artistId: myArtist.id,
+                audioUrl: "",
+                imageUrl: uploadedImageUrl,
+            });
+            // Clear form
+            setSongImageFile(null);
+            setSongImagePreview('');
+            setSongImageUrl('');
+            setNewSongTitle('');
+            // Refresh song list
+            const updatedSongs = await getArtistSongs(myArtist.id);
+            setSongs(updatedSongs);
+        } catch (e) {
+            setAddSongError(e.message || 'Error adding song');
+        } finally {
+            setAddingSong(false);
+        }
+    };
+
+
+
     return(
         <>
         <h1>My Songs</h1>
@@ -66,6 +112,7 @@ export default function ManageSongs({ myArtist }) {
             key={song.id}
             id={song.id}
             audioUrl={song.audioUrl}
+            imageUrl={song.imageUrl}
             artist={song.artist ?? 'Unknown artist'}
             artistId={song.artistId}
             title={song.title ?? 'Unknown title'}
@@ -75,6 +122,25 @@ export default function ManageSongs({ myArtist }) {
             registerAudioRef={(el) => registerAudioRef(song.id, el)}
             />
         ))}
+        <form action="">
+            <h2>Add New Song</h2>
+            <input type="file" accept="image/*" onChange={(e) => {
+                const file = e.target.files[0];
+                setSongImageFile(file);
+                if (file) {
+                    const preview = URL.createObjectURL(file);
+                    setSongImagePreview(preview);
+                    setSongImageUrl('');
+                } else {
+                    setSongImagePreview('');
+                }
+            }} />
+            {songImagePreview && <img src={songImagePreview} alt="Preview" style={{maxWidth: '200px', display:'block', marginTop:8}} />}
+            {songImageUrl && !songImagePreview && <img src={songImageUrl} alt={myArtist.artistId} style={{maxWidth: '200px', display:'block', marginTop:8}} />}
+            <input type="text" placeholder="Song Title" value={newSongTitle} onChange={(e) => setNewSongTitle(e.target.value)} required/>
+            <button type="submit" onClick={handleAddSong} disabled={addingSong}>{addingSong ? 'Adding…' : 'Add Song'}</button>
+            {addSongError && <p style={{color:'red'}}>Error: {addSongError}</p>}    
+        </form>
         </>
     )
 }

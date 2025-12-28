@@ -61,6 +61,7 @@ export default function Home() {
           key={song.id}
           id={song.id}
           audioUrl={song.audioUrl}
+          imageUrl={song.imageUrl ?? ''}
           artist={song.artist ?? 'Unknown artist'}
           artistId={song.artistId}
           title={song.title ?? 'Unknown title'}
