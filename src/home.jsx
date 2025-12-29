@@ -3,7 +3,7 @@ import {getAllSongs} from './firebase.js';
 
 import Song from './song.jsx';
 
-export default function Home() {
+export default function Home({userId}) {
   const [songs, setSongs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -21,6 +21,7 @@ export default function Home() {
   };
 
   const handlePlay = (id) => {
+    //console.log('handlePlay called for id', id);
     setPlayingSongId(id);
     // pause any other audio elements
     Object.entries(audioRefs.current).forEach(([key, audioEl]) => {
@@ -53,6 +54,7 @@ export default function Home() {
   return (
     <>
   <h1>Chart</h1>
+  {/* <h3>Total time played this session: {timePlayed/60000}</h3> */}
   {loading && <p>Loading…</p>}
       {error && <p>Error: {error}</p>}
       {!loading && !error && songs.length === 0 && <p>No songs found</p>}
@@ -64,6 +66,7 @@ export default function Home() {
           imageUrl={song.imageUrl ?? ''}
           artist={song.artist ?? 'Unknown artist'}
           artistId={song.artistId}
+          userId={userId}
           title={song.title ?? 'Unknown title'}
           isPlaying={playingSongId === song.id}
           onPlay={() => handlePlay(song.id)}

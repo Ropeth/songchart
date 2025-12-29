@@ -3,6 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
+import { duration } from "@mui/material";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 // Read config from Vite environment variables (VITE_ prefix)
@@ -177,6 +178,32 @@ const createSong = async ({ title, artistId, audioUrl, imageUrl } = {}) => {
   }
 }
 
+const createPlay = async (songId, duration, userId) => {
+  const playsCol = collection(db, 'plays');
+  try {
+    const newPlayRef = doc(playsCol);
+    await setDoc(newPlayRef, {
+      songId: songId,
+      playedAt: serverTimestamp(),
+      duration: duration,
+      userId: userId,
+    });
+    return newPlayRef.id;
+  } catch (err) {
+    console.error('Error creating play document:', err);
+    throw err;
+  }
+}
+const updatePlay = async (playId, duration) => {
+  const playRef = doc(db, 'plays', playId);
+  try {
+    await updateDoc(playRef, { duration: duration });
+  } catch (err) {
+    console.error('Error updating play document:', err);
+    throw err;
+  }
+}
+
 const updateSong = async (songId, data) => {
   const songRef = doc(db, 'songs', songId);
   try {
@@ -283,4 +310,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, deleteSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, createPlay, updatePlay, deleteSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };

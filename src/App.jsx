@@ -18,6 +18,8 @@ function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState(null);
   const [isRegister, setIsRegister] = useState(false);
+  
+  // const [timePlayed, setTimePlayed] = useState(0);
 
   // Forgot password state
   const [resetMode, setResetMode] = useState(false);
@@ -108,7 +110,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home />} />
+        <Route path="/" element={<Home userId={user?.uid} />} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />

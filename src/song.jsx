@@ -1,13 +1,15 @@
 
-import reactLogo from './assets/react.svg'
 import { useEffect, useRef, useState } from 'react';
-import {getArtist} from './firebase.js';
+import {getArtist, createPlay, updatePlay} from './firebase.js';
 
 
-export default function Song({ id, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
+export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
+  const [timeStarted, setTimeStarted] = useState(0);
+  const [playedDuration, setPlayedDuration] = useState(0);
+  const [currentPlayId, setCurrentPlayId] = useState(null);
 
   useEffect(() => {
     if (registerAudioRef) registerAudioRef(audioRef.current);
@@ -19,10 +21,41 @@ export default function Song({ id, title, artist, artistId, audioUrl, imageUrl, 
     if (!audio) return;
     if (isPlaying) {
       audio.play().catch(() => {});
+      setTimeStarted(Date.now());
+      // Create play and store its id (await the promise so we store the actual id)
+      (async () => {
+        try {
+          const playId = await createPlay(id, 0, userId);
+          setCurrentPlayId(playId);
+        } catch (e) {
+          console.error('Failed to create play:', e);
+        }
+      })();
     } else {
       if (!audio.paused) audio.pause();
+      if (timeStarted) {
+        const finalDuration = Date.now() - timeStarted;
+        console.log({timeStarted}, timeStarted);
+        setPlayedDuration(finalDuration);
+        console.log({finalDuration}, finalDuration);
+        if (currentPlayId) {
+          updatePlay(currentPlayId, finalDuration).catch(err => console.error('Failed to update play duration:', err));
+        }
+        setTimeStarted(0);
     }
+  }
   }, [isPlaying]);
+
+  // Periodically update play duration every 10s while playing
+  useEffect(() => {
+    if (!isPlaying || !timeStarted || !currentPlayId) return;
+    const intervalId = setInterval(() => {
+      const dur = Date.now() - timeStarted;
+      setPlayedDuration(dur);
+      updatePlay(currentPlayId, dur).catch(err => console.error('Failed to periodically update play duration:', err));
+    }, 10000);
+    return () => clearInterval(intervalId);
+  }, [isPlaying, timeStarted, currentPlayId]);
 
   const [showModal, setShowModal] = useState(false);
   const [modalBio, setModalBio] = useState('');
@@ -43,6 +76,7 @@ export default function Song({ id, title, artist, artistId, audioUrl, imageUrl, 
 
   return (
     <div className={'songbox' + (isPlaying ? ' playing' : '')}>
+      {timeStarted}
       <audio ref={audioRef} controls src={audioUrl} style={{ width: "100%" }} onPlay={() => onPlay && onPlay()} onPause={() => onPause && onPause()}>
         Your browser does not support the audio element.
       </audio>
