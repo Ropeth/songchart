@@ -53,10 +53,10 @@ export default function EditableSong({ id, title, artist, artistId, audioUrl, is
     }
   };
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id, audioUrl, imageUrl) => {
     if (!window.confirm('Are you sure you want to delete this song? This action cannot be undone.')) return; 
     try {
-      await deleteSong(id);
+      await deleteSong(id, audioUrl, imageUrl);
       alert('Song deleted', id);
       // Optionally, you can add a callback here to inform the parent component about the deletion
       if (typeof onDelete === 'function') onDelete(id);
@@ -103,7 +103,7 @@ export default function EditableSong({ id, title, artist, artistId, audioUrl, is
           </div>
         </>
       )}
-      <button onClick={() => { handleDelete(id) }}>Delete</button>
+      <button onClick={() => { handleDelete(id, audioUrl, imageUrl) }}>Delete</button>
       {isPlaying && <span className='playing-badge'>Playing ▶</span>}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>

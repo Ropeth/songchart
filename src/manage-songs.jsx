@@ -83,7 +83,6 @@ export default function ManageSongs({ myArtist, user }) {
             let uploadedAudioUrl = '';
             if (songImageFile) {
                 // upload image to Firebase Storage
-                console.log(`songs/${user.uid}/${Date.now()}_${songImageFile.name}`);
                 uploadedImageUrl = await uploadImage(songImageFile, `songs/${user.uid}/${Date.now()}_${songImageFile.name}`);
                 setSongImageUrl(uploadedImageUrl);
                 setSongImagePreview('');
@@ -96,7 +95,6 @@ export default function ManageSongs({ myArtist, user }) {
             }
             if (songAudioFile) {
                 // upload audio to Firebase Storage
-                console.log(`songs/${user.uid}/audio_${Date.now()}_${songAudioFile.name}`);
                 uploadedAudioUrl = await uploadImage(songAudioFile, `songs/${user.uid}/audio_${Date.now()}_${songAudioFile.name}`);
                 setSongAudioUrl(uploadedAudioUrl);
                 setSongAudioPreview('');

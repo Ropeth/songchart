@@ -1,7 +1,7 @@
 
 import { initializeApp } from "firebase/app";
 import { getFirestore, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -187,10 +187,30 @@ const updateSong = async (songId, data) => {
   }
 } 
 
-const deleteSong = async (songId) => {
+const deleteSong = async (songId, audioUrl, imageUrl) => {
   const songRef = doc(db, 'songs', songId);
   try {
+    // Delete the audio and image files from storage
+    if (audioUrl) {
+      const audioRef = ref(storage, audioUrl);
+      try {
+        await deleteObject(audioRef);
+        console.log("Audio deleted successfully");
+      } catch (err) {
+        console.error('Error deleting audio file:', err);
+      }
+    }
+    if (imageUrl) {
+      const imageRef = ref(storage, imageUrl);
+      try {
+        await deleteObject(imageRef);
+        console.log("Image deleted successfully");
+      } catch (err) {
+        console.error('Error deleting image file:', err);
+      }
+    }
     await deleteDoc(songRef);
+    console.log("Song document deleted successfully");
   } catch (err) {
     console.error('Error deleting song document:', err);
     throw err;
