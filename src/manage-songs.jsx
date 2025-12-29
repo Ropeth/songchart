@@ -76,7 +76,6 @@ export default function ManageSongs({ myArtist, user }) {
     }, [songImagePreview, songAudioPreview]);
 
     const handleAddSong = async (e) => {
-        e.preventDefault();
         setAddSongError(null);
         setAddingSong(true);
         try {
@@ -149,7 +148,7 @@ export default function ManageSongs({ myArtist, user }) {
             registerAudioRef={(el) => registerAudioRef(song.id, el)}
             />
         ))}
-        <form action="">
+        <form action={handleAddSong}>
             <h2>Add New Song</h2>
             <label style={{display:'block', marginTop:8}}>
             Upload image — max 5MB:
@@ -168,7 +167,7 @@ export default function ManageSongs({ myArtist, user }) {
                     setSongImageFile(null);
                     setSongImagePreview('');
                 }
-            }} />
+            }} required/>
             </label>
 
             {songImagePreview && <img src={songImagePreview} alt="Preview" style={{maxWidth: '200px', display:'block', marginTop:8}} />}
@@ -195,14 +194,14 @@ export default function ManageSongs({ myArtist, user }) {
                   const preview = URL.createObjectURL(file);
                   setSongAudioPreview(preview);
                   setSongAudioUrl('');
-              }} />
+              }} required/>
             </label>
             {songAudioError && <p style={{color:'red', marginTop:4}}>{songAudioError}</p>}
             {songAudioPreview && <audio controls src={songAudioPreview} style={{display:'block', marginTop:8}} />}
             {songAudioUrl && !songAudioPreview && <audio controls src={songAudioUrl} style={{display:'block', marginTop:8}} />}
 
             <input type="text" placeholder="Song Title" value={newSongTitle} onChange={(e) => setNewSongTitle(e.target.value)} required/>
-            <button type="submit" onClick={handleAddSong} disabled={addingSong || !!songAudioError}>{addingSong ? 'Adding…' : 'Add Song'}</button>
+            <button type="submit" disabled={addingSong || !!songAudioError}>{addingSong ? 'Adding…' : 'Add Song'}</button>
             {addSongError && <p style={{color:'red'}}>Error: {addSongError}</p>}    
         </form>
         </>
