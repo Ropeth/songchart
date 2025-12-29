@@ -150,7 +150,7 @@ export default function ManageSongs({ myArtist, user }) {
         <form action={handleAddSong}>
             <h2>Add New Song</h2>
             <label style={{display:'block', marginTop:8}}>
-            Upload image — max 5MB:
+            Upload image (max 5MB):
             <input type="file" accept="image/*" onChange={(e) => {
                 const file = e.target.files[0];
                 setSongImageFile(file);
@@ -173,7 +173,7 @@ export default function ManageSongs({ myArtist, user }) {
             {songImageUrl && !songImagePreview && <img src={songImageUrl} alt={myArtist.artistId} style={{maxWidth: '200px', display:'block', marginTop:8}} />}
 
             <label style={{display:'block', marginTop:8}}>
-              Upload audio (mp3, wav) — max 10MB:
+              Upload audio (max 10MB):
               <input type="file" accept="audio/*" onChange={(e) => {
                   setSongAudioError(null);
                   const file = e.target.files[0];

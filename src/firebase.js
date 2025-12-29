@@ -195,7 +195,7 @@ const deleteSong = async (songId, audioUrl, imageUrl) => {
       const audioRef = ref(storage, audioUrl);
       try {
         await deleteObject(audioRef);
-        console.log("Audio deleted successfully");
+        // console.log("Audio deleted successfully");
       } catch (err) {
         console.error('Error deleting audio file:', err);
       }
@@ -204,7 +204,7 @@ const deleteSong = async (songId, audioUrl, imageUrl) => {
       const imageRef = ref(storage, imageUrl);
       try {
         await deleteObject(imageRef);
-        console.log("Image deleted successfully");
+        // console.log("Image deleted successfully");
       } catch (err) {
         console.error('Error deleting image file:', err);
       }
