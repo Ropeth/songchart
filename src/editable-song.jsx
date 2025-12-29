@@ -1,10 +1,9 @@
 
-import reactLogo from './assets/react.svg'
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, updateSong} from './firebase.js';
+import {getArtist, updateSong, deleteSong} from './firebase.js';
 
 
-export default function EditableSong({ id, title, artist, artistId, audioUrl, isPlaying, onPlay, onPause, registerAudioRef, imageUrl }) {
+export default function EditableSong({ id, title, artist, artistId, audioUrl, isPlaying, onPlay, onPause, registerAudioRef, imageUrl, onDelete }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
@@ -54,6 +53,18 @@ export default function EditableSong({ id, title, artist, artistId, audioUrl, is
     }
   };
 
+  const handleDelete = async (id) => {
+    if (!window.confirm('Are you sure you want to delete this song? This action cannot be undone.')) return; 
+    try {
+      await deleteSong(id);
+      alert('Song deleted', id);
+      // Optionally, you can add a callback here to inform the parent component about the deletion
+      if (typeof onDelete === 'function') onDelete(id);
+    } catch (e) {
+      alert('Delete failed: ' + (e.message || String(e)));
+    }
+  };
+
   const getBio = async () => {
     try {
       const thisArtistData = await getArtist(artistId);
@@ -92,6 +103,7 @@ export default function EditableSong({ id, title, artist, artistId, audioUrl, is
           </div>
         </>
       )}
+      <button onClick={() => { handleDelete(id) }}>Delete</button>
       {isPlaying && <span className='playing-badge'>Playing ▶</span>}
       {showModal && (
         <div className="modal-overlay" onClick={() => setShowModal(false)} style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000}}>

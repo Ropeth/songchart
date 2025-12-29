@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, collection, setDoc, getDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import { getFirestore, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 
@@ -187,6 +187,15 @@ const updateSong = async (songId, data) => {
   }
 } 
 
+const deleteSong = async (songId) => {
+  const songRef = doc(db, 'songs', songId);
+  try {
+    await deleteDoc(songRef);
+  } catch (err) {
+    console.error('Error deleting song document:', err);
+    throw err;
+  }
+}
 
 // Firebase Authentication helpers
 const auth = getAuth(app);
@@ -254,4 +263,4 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, deleteSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };

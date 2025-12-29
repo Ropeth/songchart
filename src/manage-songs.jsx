@@ -146,6 +146,7 @@ export default function ManageSongs({ myArtist, user }) {
             onPlay={() => handlePlay(song.id)}
             onPause={() => handlePause(song.id)}
             registerAudioRef={(el) => registerAudioRef(song.id, el)}
+            onDelete={() => setSongs(prev => prev.filter(s => s.id !== song.id))}
             />
         ))}
         <form action={handleAddSong}>
