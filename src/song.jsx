@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, createPlay, updatePlay} from './firebase.js';
+import {getArtist, createPlay, updatePlay, getLikeCount, addToLikeCount} from './firebase.js';
 
 
 export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef }) {
@@ -50,8 +50,17 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
   useEffect(() => {
     if (!isPlaying || !timeStarted || !currentPlayId) return;
     const intervalId = setInterval(() => {
-      const dur = Date.now() - timeStarted;
+      const dur = (Date.now() - timeStarted)/1000;
       setPlayedDuration(dur);
+      //
+      if(dur % 60 >= 58 || dur % 60 <= 2){
+        getLikeCount(userId).then(likeCount => {
+          if(likeCount < 100){
+            console.log('Adding to like count for user', userId);
+            addToLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to add to like count:', err));
+          }
+        }).catch(err => console.error('Failed to get like count:', err));
+      }
       updatePlay(currentPlayId, dur).catch(err => console.error('Failed to periodically update play duration:', err));
     }, 10000);
     return () => clearInterval(intervalId);

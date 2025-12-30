@@ -38,6 +38,8 @@ const app = initializeApp(firebaseConfig);
 // Initialize Firestore and export it
 const db = getFirestore(app);
 
+export const storage = getStorage(app);
+
 const getSong = async (songId) => {
   const songRef = doc(db, "songs", songId);
   const songSnap = await getDoc(songRef);
@@ -95,6 +97,7 @@ const getArtistName = async (artistId) => {
     return null;
   }
 }
+
 const getArtist = async (artistId) => {
   const artistRef = doc(db, "artists", artistId);
   const artistSnap = await getDoc(artistRef);
@@ -104,7 +107,13 @@ const getArtist = async (artistId) => {
     return null;
   }
 }
-export const storage = getStorage(app);
+
+const getArtistByUser = async (uid) => {
+  const artistCol = collection(db, 'artists');
+  const artistSnapshot = await getDocs(artistCol);
+  const artistList = artistSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
+  return artistList.find(artist => artist.userId === uid);
+}
 
 const uploadImage = async (file, path) => {
   if (!file) throw new Error('No file provided for upload');
@@ -128,12 +137,6 @@ const getRole = async (uid) => {
     return null;
   }
 }
-const getArtistByUser = async (uid) => {
-  const artistCol = collection(db, 'artists');
-  const artistSnapshot = await getDocs(artistCol);
-  const artistList = artistSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
-  return artistList.find(artist => artist.userId === uid);
-}
 
 const fanToArtist = async () => {
   const user = auth.currentUser;
@@ -143,6 +146,25 @@ const fanToArtist = async () => {
     await updateDoc(userRef, { role: 'artist' });
   } catch (err) {
     console.error('Error upgrading user to artist:', err);
+    throw err;
+  }
+}
+
+const createArtist = async (artistName, bio, artistLocation, artistImageUrl, uid) => {
+  console.log("create artist for user", uid);
+  console.log(artistName, bio, artistLocation);
+  try {
+    const artistRef = await setDoc(doc(db, 'artists', uid), {
+      name: artistName,
+      location: artistLocation,
+      bio: bio,
+      artistImageUrl: artistImageUrl,
+      userId: uid,
+      createdAt: serverTimestamp()
+    });
+    return artistRef;
+  } catch (err) {
+    console.error('Error creating artist document:', err);
     throw err;
   }
 }
@@ -174,32 +196,6 @@ const createSong = async ({ title, artistId, audioUrl, imageUrl } = {}) => {
     return newSongRef.id;
   } catch (err) {
     console.error('Error creating song document:', err);
-    throw err;
-  }
-}
-
-const createPlay = async (songId, duration, userId) => {
-  const playsCol = collection(db, 'plays');
-  try {
-    const newPlayRef = doc(playsCol);
-    await setDoc(newPlayRef, {
-      songId: songId,
-      playedAt: serverTimestamp(),
-      duration: duration,
-      userId: userId,
-    });
-    return newPlayRef.id;
-  } catch (err) {
-    console.error('Error creating play document:', err);
-    throw err;
-  }
-}
-const updatePlay = async (playId, duration) => {
-  const playRef = doc(db, 'plays', playId);
-  try {
-    await updateDoc(playRef, { duration: duration });
-  } catch (err) {
-    console.error('Error updating play document:', err);
     throw err;
   }
 }
@@ -244,6 +240,83 @@ const deleteSong = async (songId, audioUrl, imageUrl) => {
   }
 }
 
+const createPlay = async (songId, duration, userId) => {
+  const playsCol = collection(db, 'plays');
+  try {
+    const newPlayRef = doc(playsCol);
+    await setDoc(newPlayRef, {
+      songId: songId,
+      playedAt: serverTimestamp(),
+      duration: duration,
+      userId: userId,
+    });
+    return newPlayRef.id;
+  } catch (err) {
+    console.error('Error creating play document:', err);
+    throw err;
+  }
+}
+
+const updatePlay = async (playId, duration) => {
+  const playRef = doc(db, 'plays', playId);
+  try {
+    await updateDoc(playRef, { duration: duration });
+  } catch (err) {
+    console.error('Error updating play document:', err);
+    throw err;
+  }
+}
+
+const createLiked = async (songId, userId) => {
+  const likesCol = collection(db, 'likes');
+  try {
+    const newLikeRef = doc(likesCol);
+    await setDoc(newLikeRef, {
+      songId: songId,
+      likedAt: serverTimestamp(),
+      userId: userId,
+    });
+    return newLikeRef.id;
+  } catch (err) {
+    console.error('Error creating like document:', err);
+    throw err;
+  }
+}
+
+const getLikedByUser = async (userId) => {
+  try {
+    const likesCol = collection(db, "likes");
+    const likeSnapshot = await getDocs(likesCol);
+    const likeList = likeSnapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(like => like.userId === userId);
+    return likeList; 
+  } catch (err) {
+    console.error('Error fetching likes:', err);
+    throw err;
+  }
+}
+
+const addToLikeCount =async (userId, newLikeCount) => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      likeCount: newLikeCount
+    });
+  } catch (err) {
+    console.error('Error adding to newLikeCount to user', err);
+    throw err;
+  }
+}
+
+const getLikeCount = async (userId) => {
+  const userRef = doc(db, 'users', userId);
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    return userSnap.data().likeCount || 0;  
+  }
+}
+
 // Firebase Authentication helpers
 const auth = getAuth(app);
 
@@ -256,7 +329,8 @@ const registerWithEmail = async (email, password) => {
       await setDoc(doc(db, 'users', user.uid), {
         email: user.email,
         role: 'fan',
-        createdAt: serverTimestamp()
+        createdAt: serverTimestamp(),
+        likeCount: 0,
       });
     } catch (err) {
       console.error('Error creating user document:', err);
@@ -268,26 +342,6 @@ const registerWithEmail = async (email, password) => {
     throw err;
   }
 }
-
-const createArtist = async (artistName, bio, artistLocation, artistImageUrl, uid) => {
-  console.log("create artist for user", uid);
-  console.log(artistName, bio, artistLocation);
-  try {
-    const artistRef = await setDoc(doc(db, 'artists', uid), {
-      name: artistName,
-      location: artistLocation,
-      bio: bio,
-      artistImageUrl: artistImageUrl,
-      userId: uid,
-      createdAt: serverTimestamp()
-    });
-    return artistRef;
-  } catch (err) {
-    console.error('Error creating artist document:', err);
-    throw err;
-  }
-}
-
 
 const loginWithEmail = async (email, password) => {
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -310,4 +364,35 @@ const sendPasswordReset = async (email) => {
   }
 }
 
-export { getSong, getAllSongs, getArtistName, getArtist, getArtistSongs, createArtist, updateArtist, updateSong, createSong, createPlay, updatePlay, deleteSong, getRole, getArtistByUser, uploadImage, db, auth, registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, fanToArtist };
+export { 
+  db, 
+  getSong, 
+  getAllSongs, 
+  getArtistSongs, 
+  //
+  getArtistName, 
+  getArtist, getArtistByUser, 
+  uploadImage, 
+  getRole, 
+  fanToArtist, 
+  createArtist, 
+  updateArtist, 
+  //
+  createSong, 
+  updateSong, 
+  deleteSong, 
+  //
+  createPlay, 
+  updatePlay, 
+  //
+  createLiked,
+  getLikedByUser,
+  addToLikeCount,
+  getLikeCount,
+  auth, 
+  registerWithEmail, 
+  loginWithEmail, 
+  signOutUser, 
+  subscribeAuth, 
+  sendPasswordReset, 
+};
