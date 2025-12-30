@@ -67,7 +67,6 @@ function App() {
     if (user) {
         checkLikeCount(user.uid);
         getLikedByUserToday(user.uid).then(likedSongs => {
-            //console.log('Fetched liked songs for user', user.uid, likedSongs);
             setLikedSongs(likedSongs || []);
         }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
     }

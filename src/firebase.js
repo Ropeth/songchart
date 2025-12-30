@@ -307,21 +307,49 @@ const getLikedByUser = async (userId) => {
   }
 }
 
+// const getLikedByUserToday = async (userId) => {
+//   try {
+//     const likesCol = collection(db, "likes");
+//     const likeSnapshot = await getDocs(likesCol);
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const likeList = likeSnapshot.docs
+//       .map(d => ({ id: d.id, ...d.data() }))
+//       .filter(like => like.userId === userId && like.likedAt.toDate() >= today);
+//     return likeList; 
+//   } catch (err) {
+//     console.error('Error fetching likes:', err);
+//     throw err;
+//   }
+// }    
+
 const getLikedByUserToday = async (userId) => {
   try {
     const likesCol = collection(db, "likes");
     const likeSnapshot = await getDocs(likesCol);
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const likeList = likeSnapshot.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(like => like.userId === userId && like.likedAt.toDate() >= today);
-    return likeList; 
+
+    // 1. Filter the docs first to keep the logic efficient
+    const filteredDocs = likeSnapshot.docs.filter(d => {
+      const data = d.data();
+      return data.userId === userId && data.likedAt.toDate() >= today;
+    });
+
+    // 2. Reduce the array into a single object: { songId: likeId }
+    const likeMap = filteredDocs.reduce((acc, d) => {
+      const data = d.data();
+      acc[data.songId] = d.id; 
+      return acc;
+    }, {});
+
+    return likeMap; 
   } catch (err) {
     console.error('Error fetching likes:', err);
     throw err;
   }
-}    
+}
 
 const addToLikeCount =async (userId, newLikeCount) => {
   const userRef = doc(db, 'users', userId);
