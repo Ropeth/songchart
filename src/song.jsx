@@ -120,33 +120,42 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
             console.warn('No likeId to remove.');
             return;
           }
-          //give user a like back, take it from the song
-          removeLiked(likeId).then(() => {
-            setIsLiked(false);
-            setLikeId(null);
-            getLikeCount(userId).then(likeCount => {
-            console.log('incmenting like count for user', userId);
-            updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
-            setLikeCount(likeCount + 1);
-            }).catch(err => console.error('Failed to get like count:', err));
-          }).catch(err => {
-            console.error('Failed to unlike song:', err);
-            alert('Failed to unlike song.');
-          });
+          getLikeCount(userId).then(likeCount => {
+            //give user a like back, take it from the song
+            // if(likeCount >= 100){
+            //   alert('You have reached the maximum like count of 100. Cannot unlike this song.');
+            //   return;
+            // }
+            removeLiked(likeId).then(() => {
+              setIsLiked(false);
+              setLikeId(null);
+              console.log('incmenting like count for user', userId);
+              updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
+              setLikeCount(likeCount + 1); 
+            }).catch(err => {
+              console.error('Failed to unlike song:', err);
+              alert('Failed to unlike song.');
+            });
+          }).catch(err => console.error('Failed to get like count:', err));
         } else {
-          //take away a like from user, give it to the song
-          createLiked(id, userId).then((newLikeId) => {
-            setIsLiked(true);
-            setLikeId(newLikeId);
-            getLikeCount(userId).then(likeCount => {
+          
+          getLikeCount(userId).then(likeCount => {
+            //take away a like from user, give it to the song
+            if(likeCount <= 0){
+              alert('You do not have enough likes to like this song.');
+              return;
+            } 
+            createLiked(id, userId).then((newLikeId) => {
+              setIsLiked(true);
+              setLikeId(newLikeId);
               console.log('decrementing like count for user', userId);
               updateLikeCount(userId, likeCount - 1).catch(err => console.error('Failed to decrement like count:', err));
-              setLikeCount(likeCount - 1);
-            }).catch(err => console.error('Failed to get like count:', err));
-          }).catch(err => {
-            console.error('Failed to like song:', err);
-            alert('Failed to like song.');
-          });
+              setLikeCount(likeCount - 1);                
+            }).catch(err => {
+              console.error('Failed to like song:', err);
+              alert('Failed to like song.');
+            });      
+          }).catch(err => console.error('Failed to get like count:', err));
         }
       }}
       >
