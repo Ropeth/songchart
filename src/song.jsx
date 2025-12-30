@@ -66,6 +66,8 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
             console.log('Adding to like count for user', userId);
             updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to add to like count:', err));
             setLikeCount(likeCount + 1);
+          } else {
+            console.log('User', userId, 'has maxed out like count at', likeCount);
           }
         }).catch(err => console.error('Failed to get like count:', err));
       }
@@ -118,19 +120,21 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
             console.warn('No likeId to remove.');
             return;
           }
+          //give user a like back, take it from the song
           removeLiked(likeId).then(() => {
             setIsLiked(false);
             setLikeId(null);
             getLikeCount(userId).then(likeCount => {
-              console.log('incmenting like count for user', userId);
-              updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
-              setLikeCount(likeCount + 1);
+            console.log('incmenting like count for user', userId);
+            updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
+            setLikeCount(likeCount + 1);
             }).catch(err => console.error('Failed to get like count:', err));
           }).catch(err => {
             console.error('Failed to unlike song:', err);
             alert('Failed to unlike song.');
           });
         } else {
+          //take away a like from user, give it to the song
           createLiked(id, userId).then((newLikeId) => {
             setIsLiked(true);
             setLikeId(newLikeId);
