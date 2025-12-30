@@ -64,13 +64,16 @@ function App() {
   }, [user, myArtist]);
 
   useEffect(() => {
+    console.log('Like count updated:', likeCount);
+    console.log('User is:', user);
     if (user) {
         checkLikeCount(user.uid);
         getLikedByUserToday(user.uid).then(likedSongs => {
             setLikedSongs(likedSongs || []);
+            console.log('Fetched liked songs for user', user.uid, likedSongs);
         }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
     }
-  }, [likeCount]);
+  }, [user]);
 
   useEffect(() => {
     const fetchMyArtist = async () => {
@@ -88,7 +91,7 @@ function App() {
     try {
       const likeCount = await getLikeCount(userId);
       if (likeCount === null || likeCount === undefined) {
-        await addToLikeCount(userId, 0);
+        await updateLikeCount(userId, 0);
         setLikeCount(0);
       } else {
         setLikeCount(likeCount);

@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, createPlay, updatePlay, getLikeCount, addToLikeCount, createLiked, removeLiked} from './firebase.js';
+import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, createLiked, removeLiked} from './firebase.js';
 
 
 export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, initialIsLiked, initialLikeId }) {
@@ -64,7 +64,7 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
         getLikeCount(userId).then(likeCount => {
           if(likeCount < 100){
             console.log('Adding to like count for user', userId);
-            addToLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to add to like count:', err));
+            updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to add to like count:', err));
             setLikeCount(likeCount + 1);
           }
         }).catch(err => console.error('Failed to get like count:', err));
@@ -121,6 +121,11 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
           removeLiked(likeId).then(() => {
             setIsLiked(false);
             setLikeId(null);
+            getLikeCount(userId).then(likeCount => {
+              console.log('incmenting like count for user', userId);
+              updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
+              setLikeCount(likeCount + 1);
+            }).catch(err => console.error('Failed to get like count:', err));
           }).catch(err => {
             console.error('Failed to unlike song:', err);
             alert('Failed to unlike song.');
@@ -129,6 +134,11 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
           createLiked(id, userId).then((newLikeId) => {
             setIsLiked(true);
             setLikeId(newLikeId);
+            getLikeCount(userId).then(likeCount => {
+              console.log('decrementing like count for user', userId);
+              updateLikeCount(userId, likeCount - 1).catch(err => console.error('Failed to decrement like count:', err));
+              setLikeCount(likeCount - 1);
+            }).catch(err => console.error('Failed to get like count:', err));
           }).catch(err => {
             console.error('Failed to like song:', err);
             alert('Failed to like song.');
