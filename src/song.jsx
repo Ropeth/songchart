@@ -3,15 +3,20 @@ import { useEffect, useRef, useState } from 'react';
 import {getArtist, createPlay, updatePlay, getLikeCount, addToLikeCount, createLiked, removeLiked} from './firebase.js';
 
 
-export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount }) {
+export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, initialIsLiked, initialLikeId }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
   const [timeStarted, setTimeStarted] = useState(0);
   const [playedDuration, setPlayedDuration] = useState(0);
   const [currentPlayId, setCurrentPlayId] = useState(null);
-  const [isLiked, setIsLiked] = useState(false);
-  const [likeId, setLikeId] = useState(null);
+  const [isLiked, setIsLiked] = useState(initialIsLiked || false);
+  const [likeId, setLikeId] = useState(initialLikeId || null);
+
+  // Keep local liked state in sync if parent changes initialIsLiked
+  useEffect(() => {
+    setIsLiked(initialIsLiked || false);
+  }, [initialIsLiked]);
 
   useEffect(() => {
     if (registerAudioRef) registerAudioRef(audioRef.current);
@@ -107,13 +112,30 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
           </div>
         </div>
       )}
-      <button onClick={() => createLiked(userId, id).then(() => {
-        alert('You liked this song!');
-        setIsLiked(true);
-      }).catch(err => {
-        console.error('Failed to like song:', err);
-        alert('Failed to like song.');
-      })}>
+      <button onClick={() => {
+        if (isLiked) {
+          if (!likeId) {
+            console.warn('No likeId to remove.');
+            return;
+          }
+          removeLiked(likeId).then(() => {
+            setIsLiked(false);
+            setLikeId(null);
+          }).catch(err => {
+            console.error('Failed to unlike song:', err);
+            alert('Failed to unlike song.');
+          });
+        } else {
+          createLiked(id, userId).then((newLikeId) => {
+            setIsLiked(true);
+            setLikeId(newLikeId);
+          }).catch(err => {
+            console.error('Failed to like song:', err);
+            alert('Failed to like song.');
+          });
+        }
+      }}
+      >
         {isLiked ? '❤️' : '🤍'}
       </button>
     </div>

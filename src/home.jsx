@@ -3,10 +3,12 @@ import {getAllSongs} from './firebase.js';
 
 import Song from './song.jsx';
 
-export default function Home({userId, setLikeCount}) {
+export default function Home({userId, setLikeCount, likedSongs}) {
   const [songs, setSongs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  // const [likedSongIds, setLikedSongIds] = useState([]);
+  // const [likedBySong, setLikedBySong] = useState({});
 
   // Playing state and audio refs (ensure only one song plays at a time)
   const [playingSongId, setPlayingSongId] = useState(null);
@@ -37,6 +39,7 @@ export default function Home({userId, setLikeCount}) {
 
 
   useEffect(() => {
+    console.log(likedSongs);
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -48,8 +51,24 @@ export default function Home({userId, setLikeCount}) {
 
     return () => { cancelled = true };
 
-  }, []);
+  }, [likedSongs]);
 
+  // Normalize liked songs into an array of song IDs for quick lookups
+  const likedSongIds = (likedSongs || []).map(l => {
+    if (!l) return null;
+    if (typeof l === 'string') return l;
+    // l may be an object like { id, songId, userId }
+    return l.songId ?? l.id ?? null;
+  }).filter(Boolean);
+
+  // Map songId -> likeId (if available)
+  const likedBySong = (likedSongs || []).reduce((acc, l) => {
+    if (!l || typeof l === 'string') return acc;
+    const songId = l.songId ?? l.song?.id ?? null;
+    const likeId = l.id ?? l.likeId ?? null;
+    if (songId) acc[songId] = likeId ?? acc[songId] ?? null;
+    return acc;
+  }, {});
 
   return (
     <>
@@ -73,6 +92,8 @@ export default function Home({userId, setLikeCount}) {
           onPause={() => handlePause(song.id)}
           registerAudioRef={(el) => registerAudioRef(song.id, el)}
           setLikeCount={setLikeCount}
+          initialIsLiked={Boolean(likedBySong[song.id]) || likedSongIds.includes(song.id)}
+          initialLikeId={likedBySong[song.id] ?? null}
         />
       ))}
       </>

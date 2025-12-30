@@ -307,6 +307,22 @@ const getLikedByUser = async (userId) => {
   }
 }
 
+const getLikedByUserToday = async (userId) => {
+  try {
+    const likesCol = collection(db, "likes");
+    const likeSnapshot = await getDocs(likesCol);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const likeList = likeSnapshot.docs
+      .map(d => ({ id: d.id, ...d.data() }))
+      .filter(like => like.userId === userId && like.likedAt.toDate() >= today);
+    return likeList; 
+  } catch (err) {
+    console.error('Error fetching likes:', err);
+    throw err;
+  }
+}    
+
 const addToLikeCount =async (userId, newLikeCount) => {
   const userRef = doc(db, 'users', userId);
   try {
@@ -398,6 +414,7 @@ export {
   createLiked,
   removeLiked,
   getLikedByUser,
+  getLikedByUserToday,
   addToLikeCount,
   getLikeCount,
   auth, 

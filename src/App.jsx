@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, getLikedByUserToday} from './firebase.js';
 import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
@@ -19,6 +19,7 @@ function App() {
   const [authError, setAuthError] = useState(null);
   const [isRegister, setIsRegister] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
+  const [likedSongs, setLikedSongs] = useState([]);
   
   // const [timePlayed, setTimePlayed] = useState(0);
 
@@ -65,6 +66,10 @@ function App() {
   useEffect(() => {
     if (user) {
         checkLikeCount(user.uid);
+        getLikedByUserToday(user.uid).then(likedSongs => {
+            //console.log('Fetched liked songs for user', user.uid, likedSongs);
+            setLikedSongs(likedSongs || []);
+        }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
     }
   }, [likeCount]);
 
@@ -132,7 +137,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount}/>} />
+        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} likedSongs={likedSongs} />} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
