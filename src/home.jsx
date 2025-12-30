@@ -3,7 +3,7 @@ import {getAllSongs} from './firebase.js';
 
 import Song from './song.jsx';
 
-export default function Home({userId}) {
+export default function Home({userId, setLikeCount}) {
   const [songs, setSongs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -72,6 +72,7 @@ export default function Home({userId}) {
           onPlay={() => handlePlay(song.id)}
           onPause={() => handlePause(song.id)}
           registerAudioRef={(el) => registerAudioRef(song.id, el)}
+          setLikeCount={setLikeCount}
         />
       ))}
       </>

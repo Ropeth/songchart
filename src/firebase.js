@@ -283,6 +283,16 @@ const createLiked = async (songId, userId) => {
   }
 }
 
+const removeLiked = async (likeId) => {
+  const likeRef = doc(db, 'likes', likeId); 
+  try {
+    await deleteDoc(likeRef);
+  } catch (err) {
+    console.error('Error deleting like document:', err);
+    throw err;
+  }
+}
+
 const getLikedByUser = async (userId) => {
   try {
     const likesCol = collection(db, "likes");
@@ -386,6 +396,7 @@ export {
   updatePlay, 
   //
   createLiked,
+  removeLiked,
   getLikedByUser,
   addToLikeCount,
   getLikeCount,

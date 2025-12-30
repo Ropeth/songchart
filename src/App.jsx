@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount} from './firebase.js';
 import Contact from './contact.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
@@ -18,6 +18,7 @@ function App() {
   const [authPassword, setAuthPassword] = useState('');
   const [authError, setAuthError] = useState(null);
   const [isRegister, setIsRegister] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   
   // const [timePlayed, setTimePlayed] = useState(0);
 
@@ -55,10 +56,17 @@ function App() {
           if (user) {
               const userRole = await getRole(user.uid);
               setRole(userRole);
+              checkLikeCount(user.uid);
           }
       };
       fetchRole();
-  }, [user]);
+  }, [user, myArtist]);
+
+  useEffect(() => {
+    if (user) {
+        checkLikeCount(user.uid);
+    }
+  }, [likeCount]);
 
   useEffect(() => {
     const fetchMyArtist = async () => {
@@ -71,6 +79,20 @@ function App() {
     }
     fetchMyArtist();
   }, [user]);
+
+  const checkLikeCount = async (userId) => {
+    try {
+      const likeCount = await getLikeCount(userId);
+      if (likeCount === null || likeCount === undefined) {
+        await addToLikeCount(userId, 0);
+        setLikeCount(0);
+      } else {
+        setLikeCount(likeCount);
+      }
+    } catch (err) {
+      console.error('Failed to check or update like count:', err);
+    }
+  };
 
   // Auth form submit handler
   const handleAuthSubmit = async (e) => {
@@ -110,7 +132,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home userId={user?.uid} />} />
+        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount}/>} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/contact" element={<Contact />} />
@@ -121,6 +143,7 @@ function App() {
       {/* Auth UI */}
       <div style={{ marginBottom: 16 }}>
         {myArtist && <p>Artist: {myArtist.name}</p>}
+        {user && <p>Like Count: {likeCount}</p>}
         {user ? (
           <div>
             <p>Signed in as <strong>{user.email}</strong></p>
