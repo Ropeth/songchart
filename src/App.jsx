@@ -144,7 +144,7 @@ function App() {
         <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} likedSongs={likedSongs} />} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
-        <Route path="/shop" element={<Shop />} />
+        <Route path="/shop" element={<Shop userId={user?.uid} />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
         <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
