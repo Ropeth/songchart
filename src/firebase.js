@@ -397,6 +397,7 @@ const registerWithEmail = async (email, password) => {
         role: 'fan',
         createdAt: serverTimestamp(),
         likeCount: 0,
+        boughtLikesBalance:0
       });
     } catch (err) {
       console.error('Error creating user document:', err);

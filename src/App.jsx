@@ -9,6 +9,7 @@ import About from './about.jsx';
 import ArtistAccount from './artist-account.jsx';
 import ManageSongs from './manage-songs.jsx';
 import Home from './home.jsx';
+import PaymentSuccess from './payment-success.jsx';
 
 function App() {
   // Auth state
@@ -148,6 +149,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
         <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
+        <Route path="/payment-success" element={<PaymentSuccess />} />
       </Routes>
 
       {/* Auth UI */}
