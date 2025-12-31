@@ -3,7 +3,8 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
-import { duration } from "@mui/material";
+import { query, where } from "firebase/firestore";
+// import { duration } from "@mui/material";
 
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
 // Read config from Vite environment variables (VITE_ prefix)
@@ -293,20 +294,30 @@ const removeLiked = async (likeId) => {
   }
 }
 
+// const getLikedByUser = async (userId) => {
+//   try {
+//     const likesCol = collection(db, "likes");
+//     const likeSnapshot = await getDocs(likesCol);
+//     const likeList = likeSnapshot.docs
+//       .map(d => ({ id: d.id, ...d.data() }))
+//       .filter(like => like.userId === userId);
+//     return likeList; 
+//   } catch (err) {
+//     console.error('Error fetching likes:', err);
+//     throw err;
+//   }
+// }
 const getLikedByUser = async (userId) => {
   try {
-    const likesCol = collection(db, "likes");
-    const likeSnapshot = await getDocs(likesCol);
-    const likeList = likeSnapshot.docs
-      .map(d => ({ id: d.id, ...d.data() }))
-      .filter(like => like.userId === userId);
+    const q = query(collection(db, "likes"), where("userId", "==", userId));
+    const likeSnapshot = await getDocs(q);
+    const likeList = likeSnapshot.docs.map(d => ({ id: d.id, ...d.data() }));
     return likeList; 
   } catch (err) {
     console.error('Error fetching likes:', err);
     throw err;
   }
 }
-
 // const getLikedByUserToday = async (userId) => {
 //   try {
 //     const likesCol = collection(db, "likes");
@@ -326,19 +337,20 @@ const getLikedByUser = async (userId) => {
 const getLikedByUserToday = async (userId) => {
   try {
     const likesCol = collection(db, "likes");
-    const likeSnapshot = await getDocs(likesCol);
+    const q = query(collection(db, "likes"), where("userId", "==", userId));
+    const likeSnapshot = await getDocs(q);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     // Filter the docs first to keep the logic efficient
-    const filteredDocs = likeSnapshot.docs.filter(d => {
-      const data = d.data();
-      return data.userId === userId && data.likedAt.toDate() >= today;
-    });
+    // const filteredDocs = likeSnapshot.docs.filter(d => {
+    //   const data = d.data();
+    //   return data.userId === userId && data.likedAt.toDate() >= today;
+    // });
 
     // Reduce the array into a single object: { songId: likeId }
-    const likeMap = filteredDocs.reduce((acc, d) => {
+    const likeMap = likeSnapshot.docs.reduce((acc, d) => {
       const data = d.data();
       acc[data.songId] = d.id; 
       return acc;
