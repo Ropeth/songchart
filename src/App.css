@@ -52,6 +52,12 @@
   box-shadow: 0 4px 12px rgba(0,0,0,0.12);
 }
 
+.songbox .artist{
+  font-weight: bold;
+  cursor: pointer;
+  color: #fff;
+}
+
 .playing-badge {
   display: inline-block;
   margin-top: 8px;

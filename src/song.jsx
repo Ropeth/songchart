@@ -95,12 +95,11 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
 
   return (
     <div className={'songbox' + (isPlaying ? ' playing' : '')}>
-      {timeStarted}
-      <audio ref={audioRef} controls src={audioUrl} style={{ width: "100%" }} onPlay={() => onPlay && onPlay()} onPause={() => onPause && onPause()}>
+      <img src={imageUrl} className="songpic" alt={title}/>
+      <audio ref={audioRef} controls src={audioUrl} controlsList="nodownload" style={{ width: "100%" }} onPlay={() => onPlay && onPlay()} onPause={() => onPause && onPause()}>
         Your browser does not support the audio element.
       </audio>
-      <img src={imageUrl} className="songpic" alt={title}/>
-      <p onClick={getBio}>{artist}</p>
+      <p className='artist' onClick={getBio}>{artist}</p>
       <p>{title}</p>
       {isPlaying && <span className='playing-badge'>Playing ▶</span>}
       {showModal && (

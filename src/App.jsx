@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
 import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, getLikedByUserToday} from './firebase.js';
 import Contact from './contact.jsx';
+import Shop from './shop.jsx';
 import ArtistRegistration from './artist-registration.jsx';
 import About from './about.jsx';
 import ArtistAccount from './artist-account.jsx';
@@ -134,6 +135,7 @@ function App() {
         {role != 'artist' && <><Link to="/artist-registration">Artist Registration</Link> |{" "}</>}
         {role === 'artist' && <><Link to="/artist-account">My Account</Link> |{" "}</>}
         {role === 'artist' && <><Link to="/manage-songs">Manage Songs</Link> |{" "}</>}
+        <Link to="/shop">Shop</Link> |{" "}
         <Link to="/contact">Contact</Link>
       </nav>
 
@@ -142,6 +144,7 @@ function App() {
         <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} likedSongs={likedSongs} />} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
         <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
