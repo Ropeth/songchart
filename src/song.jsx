@@ -1,6 +1,6 @@
 
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, createLiked, removeLiked} from './firebase.js';
+import {getArtist, createPlay, updatePlay, getLikeCount, incrementLikeCount, updateLikeCount, createLiked, removeLiked} from './firebase.js';
 
 
 export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, initialIsLiked, initialLikeId }) {
@@ -119,23 +119,18 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
             console.warn('No likeId to remove.');
             return;
           }
-          getLikeCount(userId).then(likeCount => {
             //give user a like back, take it from the song
-            // if(likeCount >= 100){
-            //   alert('You have reached the maximum like count of 100. Cannot unlike this song.');
-            //   return;
-            // }
             removeLiked(likeId).then(() => {
               setIsLiked(false);
               setLikeId(null);
-              console.log('incmenting like count for user', userId);
-              updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
+              //console.log('incmenting like count for user', userId);
+              //updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
+              incrementLikeCount(userId, 1).catch(err => console.error('Failed to increment like count:', err));
               setLikeCount(likeCount + 1); 
             }).catch(err => {
               console.error('Failed to unlike song:', err);
               alert('Failed to unlike song.');
             });
-          }).catch(err => console.error('Failed to get like count:', err));
         } else {
           
           getLikeCount(userId).then(likeCount => {

@@ -66,13 +66,13 @@ function App() {
   }, [user, myArtist]);
 
   useEffect(() => {
-    console.log('Like count updated:', likeCount);
-    console.log('User is:', user);
+    //console.log('Like count updated:', likeCount);
+    //console.log('User is:', user);
     if (user) {
         checkLikeCount(user.uid);
         getLikedByUserToday(user.uid).then(likedSongs => {
             setLikedSongs(likedSongs || []);
-            console.log('Fetched liked songs for user', user.uid, likedSongs);
+            //console.log('Fetched liked songs for user', user.uid, likedSongs);
         }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
     }
   }, [user]);

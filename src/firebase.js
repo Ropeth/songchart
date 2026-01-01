@@ -317,37 +317,20 @@ const getLikedByUser = async (userId) => {
     console.error('Error fetching likes:', err);
     throw err;
   }
-}
-// const getLikedByUserToday = async (userId) => {
-//   try {
-//     const likesCol = collection(db, "likes");
-//     const likeSnapshot = await getDocs(likesCol);
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-//     const likeList = likeSnapshot.docs
-//       .map(d => ({ id: d.id, ...d.data() }))
-//       .filter(like => like.userId === userId && like.likedAt.toDate() >= today);
-//     return likeList; 
-//   } catch (err) {
-//     console.error('Error fetching likes:', err);
-//     throw err;
-//   }
-// }    
+}   
 
 const getLikedByUserToday = async (userId) => {
-  try {
-    const likesCol = collection(db, "likes");
-    const q = query(collection(db, "likes"), where("userId", "==", userId));
-    const likeSnapshot = await getDocs(q);
-    
+  try {  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Filter the docs first to keep the logic efficient
-    // const filteredDocs = likeSnapshot.docs.filter(d => {
-    //   const data = d.data();
-    //   return data.userId === userId && data.likedAt.toDate() >= today;
-    // });
+    const q = query(
+      collection(db, "likes"), 
+      where("userId", "==", userId), 
+      where("likedAt", ">=", today)
+    );
+    const likeSnapshot = await getDocs(q);
+    console.log('Fetched likes snapshot:', likeSnapshot);
 
     // Reduce the array into a single object: { songId: likeId }
     const likeMap = likeSnapshot.docs.reduce((acc, d) => {
@@ -355,7 +338,7 @@ const getLikedByUserToday = async (userId) => {
       acc[data.songId] = d.id; 
       return acc;
     }, {});
-
+    console.log('Likes by user today:', likeMap);
     return likeMap; 
   } catch (err) {
     console.error('Error fetching likes:', err);
@@ -380,6 +363,18 @@ const getLikeCount = async (userId) => {
   const userSnap = await getDoc(userRef);
   if (userSnap.exists()) {
     return userSnap.data().likeCount || 0;  
+  }
+}
+
+const incrementLikeCount = async (userId, incrementBy) => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      likeCount: admin.firestore.FieldValue.increment(incrementBy)
+    });
+  } catch (err) {
+    console.error('Error incrementing user\'s likeCount', err);
+    throw err;
   }
 }
 
@@ -458,6 +453,7 @@ export {
   getLikedByUserToday,
   updateLikeCount,
   getLikeCount,
+  incrementLikeCount,
   auth, 
   registerWithEmail, 
   loginWithEmail, 
