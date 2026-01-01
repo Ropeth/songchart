@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp } from "firebase/firestore";
+import { getFirestore, writeBatch, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp, increment } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 import { query, where } from "firebase/firestore";
@@ -116,6 +116,17 @@ const getArtistByUser = async (uid) => {
   return artistList.find(artist => artist.userId === uid);
 }
 
+const getArtistBySong = async (songId) => {
+  const songRef = doc(db, 'songs', songId);
+  const songSnap = await getDoc(songRef);
+  if (songSnap.exists()){
+    console.log(songSnap.data().artistId);
+    return songSnap.data().artistId  ?? "";;
+  } else {
+    return null;
+  }
+}
+
 const uploadImage = async (file, path) => {
   if (!file) throw new Error('No file provided for upload');
   try {
@@ -161,6 +172,7 @@ const createArtist = async (artistName, bio, artistLocation, artistImageUrl, uid
       bio: bio,
       artistImageUrl: artistImageUrl,
       userId: uid,
+      pendingEarnings:0,
       createdAt: serverTimestamp()
     });
     return artistRef;
@@ -283,18 +295,56 @@ const createLiked = async (songId, userId) => {
     throw err;
   }
 }
+// const createBoughtLiked = async (songId, userId) => {
+//   const boughtLikesCol = collection(db, 'boughtLikes');
+//   const artistId = await getArtistBySong(songId)
+//   console.log('artistId', artistId);
+//   try {
+//     const newLikeRef = doc(boughtLikesCol);
+//     await setDoc(newLikeRef, {
+//       songId: songId,
+//       likedAt: serverTimestamp(),
+//       userId: userId,
+//     });
+//     // Store 10p in artist
+//     const artistRef = doc(db, "artists", artistId);
+//     await updateDoc(artistRef, {
+//       pendingEarnings: increment(10) 
+//     });
+//     return newLikeRef.id;
+//   } catch (err) {
+//     console.error('Error creating bought like document:', err);
+//     throw err;
+//   }
+// }
+
 const createBoughtLiked = async (songId, userId) => {
-  const boughtLikesCol = collection(db, 'boughtLikes');
+  const artistId = await getArtistBySong(songId);
+  if (!artistId) throw new Error("Artist not found for this song.");
+
+  const batch = writeBatch(db); // Initialize a batch
+
+  // 1. Prepare the new Like document
+  const newLikeRef = doc(collection(db, 'boughtLikes'));
+  batch.set(newLikeRef, {
+    songId: songId,
+    likedAt: serverTimestamp(),
+    userId: userId,
+  });
+
+  // 2. Prepare the Artist's earnings update
+  const artistRef = doc(db, "artists", artistId);
+  batch.update(artistRef, {
+    pendingEarnings: increment(10)
+  });
+
+  // 3. Commit both at the same time
   try {
-    const newLikeRef = doc(boughtLikesCol);
-    await setDoc(newLikeRef, {
-      songId: songId,
-      likedAt: serverTimestamp(),
-      userId: userId,
-    });
+    await batch.commit();
+    console.log('Transaction successful: Like recorded and Artist credited.');
     return newLikeRef.id;
   } catch (err) {
-    console.error('Error creating bought like document:', err);
+    console.error('Batch transaction failed:', err);
     throw err;
   }
 }
@@ -482,6 +532,7 @@ export {
   //
   getArtistName, 
   getArtist, getArtistByUser, 
+  getArtistBySong,
   uploadImage, 
   getRole, 
   fanToArtist, 
