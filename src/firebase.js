@@ -294,19 +294,6 @@ const removeLiked = async (likeId) => {
   }
 }
 
-// const getLikedByUser = async (userId) => {
-//   try {
-//     const likesCol = collection(db, "likes");
-//     const likeSnapshot = await getDocs(likesCol);
-//     const likeList = likeSnapshot.docs
-//       .map(d => ({ id: d.id, ...d.data() }))
-//       .filter(like => like.userId === userId);
-//     return likeList; 
-//   } catch (err) {
-//     console.error('Error fetching likes:', err);
-//     throw err;
-//   }
-// }
 const getLikedByUser = async (userId) => {
   try {
     const q = query(collection(db, "likes"), where("userId", "==", userId));
@@ -330,7 +317,7 @@ const getFreeLikedByUserToday = async (userId) => {
       where("likedAt", ">=", today)
     );
     const likeSnapshot = await getDocs(q);
-    console.log('Fetched likes snapshot:', likeSnapshot);
+    //console.log('Fetched likes snapshot:', likeSnapshot);
 
     // Reduce the array into a single object: { songId: likeId }
     const likeMap = likeSnapshot.docs.reduce((acc, d) => {
@@ -338,36 +325,69 @@ const getFreeLikedByUserToday = async (userId) => {
       acc[data.songId] = d.id; 
       return acc;
     }, {});
-    console.log('Likes by user today:', likeMap);
+    //console.log('Likes by user today:', likeMap);
     return likeMap; 
   } catch (err) {
     console.error('Error fetching likes:', err);
     throw err;
   }
 }
+// const getBoughtLikedByUserToday = async (userId) => {
+//   try {  
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+
+//     const q = query(
+//       collection(db, "boughtLikes"), 
+//       where("userId", "==", userId), 
+//       where("likedAt", ">=", today)
+//     );
+//     const boughtLikesTodaySnapshot = await getDocs(q);
+//     const boughtLikesTodayList = boughtLikesTodaySnapshot.docs
+//     .map(d => ({ id: d.id, ...d.data() }))
+    
+//     return boughtLikesTodayList; 
+
+//   } catch (err) {
+//     console.error('Error fetching myBoughtLikesToday:', err);
+//     throw err;
+//   }
+// }
+
 const getBoughtLikedByUserToday = async (userId) => {
-  try {  
+  try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const q = query(
-      collection(db, "boughtLikes"), 
-      where("userId", "==", userId), 
+      collection(db, "boughtLikes"),
+      where("userId", "==", userId),
       where("likedAt", ">=", today)
     );
-    const likeSnapshot = await getDocs(q);
-    console.log('Fetched likes snapshot:', likeSnapshot);
 
-    // Reduce the array into a single object: { songId: likeId }
-    const boughtLikeMap = likeSnapshot.docs.reduce((acc, d) => {
-      const data = d.data();
-      acc[data.songId] = d.id; 
+    const boughtLikesTodaySnapshot = await getDocs(q);
+
+    // Build the lookup object directly from the snapshot
+    const lookup = boughtLikesTodaySnapshot.docs.reduce((acc, doc) => {
+      const data = doc.data();
+      const songId = data.songId;
+      const id = doc.id;
+
+      // Initialize the array for this songId if it doesn't exist
+      if (!acc[songId]) {
+        acc[songId] = [];
+      }
+
+      // Add the current document ID to the song's list
+      acc[songId].push(id);
+      
       return acc;
     }, {});
-    console.log('Likes by user today:', boughtLikeMap);
-    return boughtLikeMap; 
+
+    return lookup; // Returns: { "songId123": ["id1", "id2"], "songId456": ["id3"] }
+
   } catch (err) {
-    console.error('Error fetching likes:', err);
+    console.error('Error fetching and mapping myBoughtLikesToday:', err);
     throw err;
   }
 }

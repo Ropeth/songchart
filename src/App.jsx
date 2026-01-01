@@ -77,6 +77,7 @@ function App() {
         }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
         getBoughtLikedByUserToday(user.uid).then(myBoughtLikedSongsToday => {
             setMyBoughtLikedSongsToday(myBoughtLikedSongsToday || []);
+            //console.log("myBoughtLikedSongsToday", myBoughtLikedSongsToday)
         }).catch(err => console.error('Failed to fetch bought liked songs for user:', err)); 
     }
   }, [user]);
@@ -160,7 +161,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} setBoughtLikeCount={setBoughtLikeCount} myFreeLikedSongsToday={myFreeLikedSongsToday} />} />
+        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} setBoughtLikeCount={setBoughtLikeCount} myFreeLikedSongsToday={myFreeLikedSongsToday} myBoughtLikedSongsToday={myBoughtLikedSongsToday}/>} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/shop" element={<Shop userId={user?.uid} />} />

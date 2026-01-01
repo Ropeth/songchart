@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, updateBoughtLikeCount, createLiked, removeLiked} from './firebase.js';
 
 
-export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, setBoughtLikeCount, initialIsFreeLikedToday, initialLikeId }) {
+export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, setBoughtLikeCount, initialIsFreeLikedToday, initialBoughtLikedToday, initialLikeId }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
@@ -11,12 +11,14 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
   const [playedDuration, setPlayedDuration] = useState(0);
   const [currentPlayId, setCurrentPlayId] = useState(null);
   const [isFreeLikedToday, setIsFreeLikedToday] = useState(initialIsFreeLikedToday || false);
+  const [boughtLikedToday, setBoughtLikedToday] = useState(initialBoughtLikedToday || 0);
   const [likeId, setLikeId] = useState(initialLikeId || null);
 
   // Keep local liked state in sync if parent changes initialIsFreeLikedToday
   useEffect(() => {
     setIsFreeLikedToday(initialIsFreeLikedToday || false);
-  }, [initialIsFreeLikedToday]);
+    setBoughtLikedToday(initialBoughtLikedToday || 0);
+  }, [initialIsFreeLikedToday, initialBoughtLikedToday]);
 
   useEffect(() => {
     if (registerAudioRef) registerAudioRef(audioRef.current);
@@ -156,7 +158,9 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
       >
         {isFreeLikedToday ? '❤️' : '🤍'}
       </button>
-
+      <button onClick={()=>{}}>
+        {boughtLikedToday}
+      </button>
       {/* <button onClick={() => {
         if (songPaidLikes>0) {
           if (!boughtLikeIds || boughtLikeIds.length === 0) {
