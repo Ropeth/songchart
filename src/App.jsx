@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, getLikedByUserToday} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, updateLikeCount, getBoughtLikeCount, getFreeLikedByUserToday, getBoughtLikedByUserToday} from './firebase.js';
 import Contact from './contact.jsx';
 import Shop from './shop.jsx';
 import ArtistRegistration from './artist-registration.jsx';
@@ -21,7 +21,9 @@ function App() {
   const [authError, setAuthError] = useState(null);
   const [isRegister, setIsRegister] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
-  const [likedSongs, setLikedSongs] = useState([]);
+  const [boughtLikeCount, setBoughtLikeCount] = useState(0);
+  const [myFreeLikedSongsToday, setMyFreeLikedSongsToday] = useState([]);
+  const [myBoughtLikedSongsToday, setMyBoughtLikedSongsToday] = useState([]);
   
   // const [timePlayed, setTimePlayed] = useState(0);
 
@@ -60,20 +62,22 @@ function App() {
               const userRole = await getRole(user.uid);
               setRole(userRole);
               checkLikeCount(user.uid);
+              checkBoughtLikeCount(user.uid);
           }
       };
       fetchRole();
   }, [user, myArtist]);
 
   useEffect(() => {
-    //console.log('Like count updated:', likeCount);
-    //console.log('User is:', user);
     if (user) {
         checkLikeCount(user.uid);
-        getLikedByUserToday(user.uid).then(likedSongs => {
-            setLikedSongs(likedSongs || []);
-            //console.log('Fetched liked songs for user', user.uid, likedSongs);
+        checkBoughtLikeCount(user.uid);
+        getFreeLikedByUserToday(user.uid).then(myFreeLikedSongsToday => {
+            setMyFreeLikedSongsToday(myFreeLikedSongsToday || []);
         }).catch(err => console.error('Failed to fetch liked songs for user:', err)); 
+        getBoughtLikedByUserToday(user.uid).then(myBoughtLikedSongsToday => {
+            setMyBoughtLikedSongsToday(myBoughtLikedSongsToday || []);
+        }).catch(err => console.error('Failed to fetch bought liked songs for user:', err)); 
     }
   }, [user]);
 
@@ -100,6 +104,20 @@ function App() {
       }
     } catch (err) {
       console.error('Failed to check or update like count:', err);
+    }
+  };
+
+  const checkBoughtLikeCount = async (userId) => {
+    try {
+      const boughtLikeCount = await getBoughtLikeCount(userId);
+      if (boughtLikeCount === null || boughtLikeCount === undefined) {
+        await updateBoughtLikeCount(userId, 0);
+        setBoughtLikeCount(0);
+      } else {
+        setBoughtLikeCount(boughtLikeCount);
+      }
+    } catch (err) {
+      console.error('Failed to check or update bought like count:', err);
     }
   };
 
@@ -142,7 +160,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} likedSongs={likedSongs} />} />
+        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} setBoughtLikeCount={setBoughtLikeCount} myFreeLikedSongsToday={myFreeLikedSongsToday} />} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/shop" element={<Shop userId={user?.uid} />} />
@@ -156,6 +174,7 @@ function App() {
       <div style={{ marginBottom: 16 }}>
         {myArtist && <p>Artist: {myArtist.name}</p>}
         {user && <p>Like Count: {likeCount}</p>}
+        {user && <p>Bought Like Count: {boughtLikeCount}</p>}
         {user ? (
           <div>
             <p>Signed in as <strong>{user.email}</strong></p>

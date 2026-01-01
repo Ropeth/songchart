@@ -319,7 +319,7 @@ const getLikedByUser = async (userId) => {
   }
 }   
 
-const getLikedByUserToday = async (userId) => {
+const getFreeLikedByUserToday = async (userId) => {
   try {  
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -345,12 +345,50 @@ const getLikedByUserToday = async (userId) => {
     throw err;
   }
 }
+const getBoughtLikedByUserToday = async (userId) => {
+  try {  
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
 
-const updateLikeCount =async (userId, newLikeCount) => {
+    const q = query(
+      collection(db, "boughtLikes"), 
+      where("userId", "==", userId), 
+      where("likedAt", ">=", today)
+    );
+    const likeSnapshot = await getDocs(q);
+    console.log('Fetched likes snapshot:', likeSnapshot);
+
+    // Reduce the array into a single object: { songId: likeId }
+    const boughtLikeMap = likeSnapshot.docs.reduce((acc, d) => {
+      const data = d.data();
+      acc[data.songId] = d.id; 
+      return acc;
+    }, {});
+    console.log('Likes by user today:', boughtLikeMap);
+    return boughtLikeMap; 
+  } catch (err) {
+    console.error('Error fetching likes:', err);
+    throw err;
+  }
+}
+
+const updateLikeCount = async (userId, newLikeCount) => {
   const userRef = doc(db, 'users', userId);
   try {
     await updateDoc(userRef, {
       likeCount: newLikeCount
+    });
+  } catch (err) {
+    console.error('Error adding to newLikeCount to user', err);
+    throw err;
+  }
+}
+
+const updateBoughtLikeCount = async (userId, newBoughtLikeCount) => {
+  const userRef = doc(db, 'users', userId);
+  try {
+    await updateDoc(userRef, {
+      boughtLikesBalance: newBoughtLikeCount
     });
   } catch (err) {
     console.error('Error adding to newLikeCount to user', err);
@@ -366,17 +404,27 @@ const getLikeCount = async (userId) => {
   }
 }
 
-const incrementLikeCount = async (userId, incrementBy) => {
+const getBoughtLikeCount = async (userId) => {
   const userRef = doc(db, 'users', userId);
-  try {
-    await updateDoc(userRef, {
-      likeCount: admin.firestore.FieldValue.increment(incrementBy)
-    });
-  } catch (err) {
-    console.error('Error incrementing user\'s likeCount', err);
-    throw err;
+  const userSnap = await getDoc(userRef);
+  if (userSnap.exists()) {
+    return userSnap.data().boughtLikesBalance || 0;  
   }
 }
+
+
+
+// const incrementLikeCount = async (userId, incrementBy) => {
+//   const userRef = doc(db, 'users', userId);
+//   try {
+//     await updateDoc(userRef, {
+//       likeCount: admin.firestore.FieldValue.increment(incrementBy)
+//     });
+//   } catch (err) {
+//     console.error('Error incrementing user\'s likeCount', err);
+//     throw err;
+//   }
+// }
 
 // Firebase Authentication helpers
 const auth = getAuth(app);
@@ -450,10 +498,13 @@ export {
   createLiked,
   removeLiked,
   getLikedByUser,
-  getLikedByUserToday,
+  getFreeLikedByUserToday,
+  getBoughtLikedByUserToday,
   updateLikeCount,
+  updateBoughtLikeCount,
   getLikeCount,
-  incrementLikeCount,
+  getBoughtLikeCount,
+  //incrementLikeCount,
   auth, 
   registerWithEmail, 
   loginWithEmail, 
