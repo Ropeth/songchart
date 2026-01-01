@@ -3,7 +3,7 @@ import {getAllSongs} from './firebase.js';
 
 import Song from './song.jsx';
 
-export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLikedSongsToday, myBoughtLikedSongsToday}) {
+export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLikedSongsToday, myBoughtLikedSongsToday, boughtLikeCount}) {
   const [songs, setSongs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -75,7 +75,9 @@ export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLi
           setLikeCount={setLikeCount}
           setBoughtLikeCount={setBoughtLikeCount}
           initialIsFreeLikedToday={!!myFreeLikedSongsToday[song.id]} 
-          initialBoughtLikedToday={myBoughtLikedSongsToday[song.id]?.length ?? 0}          initialLikeId={myFreeLikedSongsToday[song.id] || null}
+          initialBoughtLikedToday={myBoughtLikedSongsToday[song.id]?.length ?? 0}          
+          initialLikeId={myFreeLikedSongsToday[song.id] || null}
+          boughtLikeCount={boughtLikeCount}
           />
       ))}
       </>

@@ -161,7 +161,7 @@ function App() {
 
       {/* Routes */}
       <Routes>
-        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} setBoughtLikeCount={setBoughtLikeCount} myFreeLikedSongsToday={myFreeLikedSongsToday} myBoughtLikedSongsToday={myBoughtLikedSongsToday}/>} />
+        <Route path="/" element={<Home userId={user?.uid} setLikeCount={setLikeCount} setBoughtLikeCount={setBoughtLikeCount} myFreeLikedSongsToday={myFreeLikedSongsToday} myBoughtLikedSongsToday={myBoughtLikedSongsToday} boughtLikeCount={boughtLikeCount}/>} />
         <Route path="/about" element={<About />} />
         <Route path="/artist-registration" element={<ArtistRegistration role={role} setRole={setRole} user={user} setUser={setUser} />} />
         <Route path="/shop" element={<Shop userId={user?.uid} />} />

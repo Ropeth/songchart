@@ -283,6 +283,21 @@ const createLiked = async (songId, userId) => {
     throw err;
   }
 }
+const createBoughtLiked = async (songId, userId) => {
+  const boughtLikesCol = collection(db, 'boughtLikes');
+  try {
+    const newLikeRef = doc(boughtLikesCol);
+    await setDoc(newLikeRef, {
+      songId: songId,
+      likedAt: serverTimestamp(),
+      userId: userId,
+    });
+    return newLikeRef.id;
+  } catch (err) {
+    console.error('Error creating bought like document:', err);
+    throw err;
+  }
+}
 
 const removeLiked = async (likeId) => {
   const likeRef = doc(db, 'likes', likeId); 
@@ -332,27 +347,6 @@ const getFreeLikedByUserToday = async (userId) => {
     throw err;
   }
 }
-// const getBoughtLikedByUserToday = async (userId) => {
-//   try {  
-//     const today = new Date();
-//     today.setHours(0, 0, 0, 0);
-
-//     const q = query(
-//       collection(db, "boughtLikes"), 
-//       where("userId", "==", userId), 
-//       where("likedAt", ">=", today)
-//     );
-//     const boughtLikesTodaySnapshot = await getDocs(q);
-//     const boughtLikesTodayList = boughtLikesTodaySnapshot.docs
-//     .map(d => ({ id: d.id, ...d.data() }))
-    
-//     return boughtLikesTodayList; 
-
-//   } catch (err) {
-//     console.error('Error fetching myBoughtLikesToday:', err);
-//     throw err;
-//   }
-// }
 
 const getBoughtLikedByUserToday = async (userId) => {
   try {
@@ -432,20 +426,6 @@ const getBoughtLikeCount = async (userId) => {
   }
 }
 
-
-
-// const incrementLikeCount = async (userId, incrementBy) => {
-//   const userRef = doc(db, 'users', userId);
-//   try {
-//     await updateDoc(userRef, {
-//       likeCount: admin.firestore.FieldValue.increment(incrementBy)
-//     });
-//   } catch (err) {
-//     console.error('Error incrementing user\'s likeCount', err);
-//     throw err;
-//   }
-// }
-
 // Firebase Authentication helpers
 const auth = getAuth(app);
 
@@ -516,6 +496,7 @@ export {
   updatePlay, 
   //
   createLiked,
+  createBoughtLiked,
   removeLiked,
   getLikedByUser,
   getFreeLikedByUserToday,

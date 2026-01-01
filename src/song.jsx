@@ -1,14 +1,13 @@
 
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, updateBoughtLikeCount, createLiked, removeLiked} from './firebase.js';
+import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, updateBoughtLikeCount, createLiked, createBoughtLiked, removeLiked} from './firebase.js';
 
 
-export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, setBoughtLikeCount, initialIsFreeLikedToday, initialBoughtLikedToday, initialLikeId }) {
+export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, setBoughtLikeCount, initialIsFreeLikedToday, initialBoughtLikedToday, initialLikeId, boughtLikeCount }) {
   if (title == null) return <p>Song not found</p>;
 
   const audioRef = useRef(null);
   const [timeStarted, setTimeStarted] = useState(0);
-  const [playedDuration, setPlayedDuration] = useState(0);
   const [currentPlayId, setCurrentPlayId] = useState(null);
   const [isFreeLikedToday, setIsFreeLikedToday] = useState(initialIsFreeLikedToday || false);
   const [boughtLikedToday, setBoughtLikedToday] = useState(initialBoughtLikedToday || 0);
@@ -45,7 +44,6 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
       if (timeStarted) {
         const finalDuration = Date.now() - timeStarted;
         console.log({timeStarted}, timeStarted);
-        setPlayedDuration(finalDuration);
         console.log({finalDuration}, finalDuration);
         if (currentPlayId) {
           updatePlay(currentPlayId, finalDuration).catch(err => console.error('Failed to update play duration:', err));
@@ -60,7 +58,6 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
     if (!isPlaying || !timeStarted || !currentPlayId) return;
     const intervalId = setInterval(() => {
       const dur = (Date.now() - timeStarted)/1000;
-      setPlayedDuration(dur);
       //
       if(dur % 60 >= 58 || dur % 60 <= 2){
         getLikeCount(userId).then(likeCount => {
@@ -158,52 +155,18 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
       >
         {isFreeLikedToday ? '❤️' : '🤍'}
       </button>
-      <button onClick={()=>{}}>
+      <button onClick={()=>{
+        if(boughtLikeCount > 0){
+          let newBoughtlikeCount = boughtLikeCount - 1;
+          let newBoughtLikedToday = boughtLikedToday + 1;
+          setBoughtLikeCount(newBoughtlikeCount);
+          setBoughtLikedToday(newBoughtLikedToday);
+          updateBoughtLikeCount(userId, newBoughtlikeCount);
+          createBoughtLiked(id, userId);
+        }
+      }}>
         {boughtLikedToday}
       </button>
-      {/* <button onClick={() => {
-        if (songPaidLikes>0) {
-          if (!boughtLikeIds || boughtLikeIds.length === 0) {
-            console.warn('No likeId to remove.');
-            return;
-          }
-            //give user a like back, take it from the song
-            getBoughtLikeCount(userId).then(boughtLikeCount => {
-
-            removeLiked(likeId).then(() => {
-              setIsLiked(false);
-              setLikeId(null);
-              updateBoughtLikeCount(userId, boughtLikeCount + 1).catch(err => console.error('Failed to increment like count:', err));
-              setBoughtLikeCount(boughtLikeCount + 1); 
-            }).catch(err => {
-              console.error('Failed to unlike song:', err);
-              alert('Failed to unlike song.');
-            });
-          }).catch(err => console.error('Failed to get boughtlike count:', err));
-        } else {
-          
-          getBoughtLikeCount(userId).then(boughtLikeCount => {
-            //take away a like from user, give it to the song
-            if(boughtLikeCount <= 0){
-              alert('You do not have enough likes to like this song.');
-              return;
-            } 
-            createLiked(id, userId).then((newLikeId) => {
-              setIsLiked(true);
-              setLikeId(newLikeId);
-              console.log('decrementing like count for user', userId);
-              updateBoughtLikeCount(userId, boughtLikeCount - 1).catch(err => console.error('Failed to decrement like count:', err));
-              setBoughtLikeCount(boughtLikeCount - 1);                
-            }).catch(err => {
-              console.error('Failed to like song:', err);
-              alert('Failed to like song.');
-            });      
-          }).catch(err => console.error('Failed to get bought like count:', err));
-        }
-      }}
-      >
-        {songPaidLikes>0 ? '❤️' : '🤍'}
-      </button> */}
     </div>
   );
 }
