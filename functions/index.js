@@ -35,10 +35,47 @@ export const createStripeCheckout = onRequest(
   }
 );
 
+// export const stripeWebhook = onRequest(
+//   { 
+//     cors: true, 
+//     secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] // Add it here
+//   }, 
+//   async (req, res) => {
+//     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+//     const sig = req.headers["stripe-signature"];
+//     let event;
+
+//     try {
+//       // Use the secret from process.env instead of a hardcoded string
+//       event = stripe.webhooks.constructEvent(
+//         req.rawBody, 
+//         sig, 
+//         process.env.STRIPE_WEBHOOK_SECRET
+//       );
+//     } catch (err) {
+//       console.error("Webhook Error:", err.message);
+//       return res.status(400).send(`Webhook Error: ${err.message}`);
+//     }
+
+//     if (event.type === "payment_intent.succeeded") {
+//       const paymentIntent = event.data.object;
+//       const userId = paymentIntent.metadata?.userId;
+
+//       if (userId) {
+//         const userRef = admin.firestore().collection("users").doc(userId);
+//         await userRef.update({
+//           boughtLikesBalance: admin.firestore.FieldValue.increment(10)
+//         });
+//       }
+//     }
+//     res.json({ received: true });
+//   }
+// );
+
 export const stripeWebhook = onRequest(
   { 
     cors: true, 
-    secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] // Add it here
+    secrets: ["STRIPE_SECRET_KEY", "STRIPE_WEBHOOK_SECRET"] 
   }, 
   async (req, res) => {
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
@@ -46,7 +83,6 @@ export const stripeWebhook = onRequest(
     let event;
 
     try {
-      // Use the secret from process.env instead of a hardcoded string
       event = stripe.webhooks.constructEvent(
         req.rawBody, 
         sig, 
@@ -57,17 +93,46 @@ export const stripeWebhook = onRequest(
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
 
-    if (event.type === "payment_intent.succeeded") {
-      const paymentIntent = event.data.object;
-      const userId = paymentIntent.metadata?.userId;
+    // --- SWITCHBOARD: Handle different event types ---
 
-      if (userId) {
-        const userRef = admin.firestore().collection("users").doc(userId);
-        await userRef.update({
-          boughtLikesBalance: admin.firestore.FieldValue.increment(10)
-        });
+    switch (event.type) {
+      
+      // 1. FAN PURCHASE: When someone buys a bundle of 10 likes
+      case "payment_intent.succeeded": {
+        const paymentIntent = event.data.object;
+        const userId = paymentIntent.metadata?.userId;
+
+        if (userId) {
+          const userRef = admin.firestore().collection("users").doc(userId);
+          await userRef.update({
+            boughtLikesBalance: admin.firestore.FieldValue.increment(10)
+          });
+          console.log(`Updated likes for fan: ${userId}`);
+        }
+        break;
       }
+
+      // 2. ARTIST ONBOARDING: When an artist finishes the Stripe form
+      case "account.updated": {
+        const account = event.data.object;
+        const userId = account.metadata?.firebaseUserId;
+
+        // If they finished the form and we have their Firebase ID
+        if (account.details_submitted && userId) {
+          await admin.firestore().collection('artists').doc(userId).update({
+            stripeConnectId: account.id,
+            stripeConnected: true,
+            payoutsEnabled: account.payouts_enabled
+          });
+          console.log(`Artist ${userId} is now connected with Stripe ID: ${account.id}`);
+        }
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type ${event.type}`);
     }
+
     res.json({ received: true });
   }
 );
@@ -86,6 +151,10 @@ export const createConnectAccount = onRequest(
         capabilities: {
           transfers: { requested: true },
         },
+        // Add metadata for the webhook to find the right user
+        metadata: {
+        firebaseUserId: userId 
+      }
       });
 
       // 2. Save the Account ID to the Artist document
@@ -95,8 +164,10 @@ export const createConnectAccount = onRequest(
       // 3. Create the Onboarding Link
       const accountLink = await stripe.accountLinks.create({
         account: account.id,
-        refresh_url: 'https://indybop.co.uk/artist-account', // URL if they refresh/fail
-        return_url: 'https://indybop.co.uk/artist-account', // URL when they finish
+        refresh_url: 'http://localhost:5173/artist-account', // URL if they refresh/fail
+        return_url: 'http://localhost:5173/artist-account', // URL when they finish
+        // refresh_url: 'https://indybop.co.uk/artist-account', // URL if they refresh/fail
+        // return_url: 'https://indybop.co.uk/artist-account', // URL when they finish
         type: 'account_onboarding',
       });
 
@@ -104,6 +175,52 @@ export const createConnectAccount = onRequest(
     } catch (error) {
       console.error("Stripe Connect Error:", error);
       res.status(500).send({ error: error.message });
+    }
+  }
+);
+
+export const transferToArtist = onRequest(
+  { cors: true, secrets: ["STRIPE_SECRET_KEY"] },
+  async (req, res) => {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const { userId } = req.body;
+
+    try {
+      // 1. Get Artist Data from Firestore
+      const artistRef = admin.firestore().collection("artists").doc(userId);
+      const artistSnap = await artistRef.get();
+      const artistData = artistSnap.data();
+
+      const amountInPence = artistData.pendingEarnings || 0;
+      const stripeConnectId = artistData.stripeConnectId;
+
+      // 2. Safety Checks
+      if (amountInPence < 2000) {
+        return res.status(400).send({ error: "Minimum withdrawal is £20" });
+      }
+      if (!stripeConnectId) {
+        return res.status(400).send({ error: "Stripe account not connected" });
+      }
+
+      // 3. Create the Transfer
+      const transfer = await stripe.transfers.create({
+        amount: amountInPence,
+        currency: 'gbp',
+        destination: stripeConnectId,
+        description: `IndyBop Payout for ${artistData.name}`,
+      });
+
+      // 4. Reset Artist's Pending Balance in Firestore
+      await artistRef.update({
+        pendingEarnings: 0,
+        lastPayoutDate: admin.firestore.FieldValue.serverTimestamp(),
+        totalPaidOut: admin.firestore.FieldValue.increment(amountInPence)
+      });
+
+      return res.status(200).send({ success: true, transferId: transfer.id });
+    } catch (error) {
+      console.error("Transfer Error:", error);
+      return res.status(500).send({ error: error.message });
     }
   }
 );

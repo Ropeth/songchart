@@ -1,6 +1,6 @@
 export default function GiftsPanel ({ artistData, userId }){
   const earningsInPounds = (artistData.pendingEarnings / 100).toFixed(2);
-  const threshold = 50;
+  const threshold = 20;//change to 50 after a month
   const progress = (earningsInPounds / threshold) * 100;
 
   const handleSetupPayouts = async () => {
@@ -20,6 +20,28 @@ export default function GiftsPanel ({ artistData, userId }){
     const { url } = await response.json();
     window.location.href = url; // Redirect to Stripe Onboarding
   };
+
+  const handleWithdraw = async () => {
+  if (!window.confirm("Ready to transfer your earnings to your bank account?")) return;
+
+  try {
+    const response = await fetch(`${import.meta.env.VITE_TRANSFER_FUNCTION_URL}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ userId })
+    });
+
+    const data = await response.json();
+    if (data.success) {
+      alert("Transfer successful! The funds are on their way to your bank.");
+      // You might want to refresh the artist data here to show £0 balance
+    } else {
+      alert("Transfer failed: " + data.error);
+    }
+  } catch (err) {
+    console.error("Payout error:", err);
+  }
+};
 
   return (
     <>
@@ -42,7 +64,7 @@ export default function GiftsPanel ({ artistData, userId }){
       ) : (
         <div>
           {earningsInPounds >= threshold ? (
-            <button>Withdraw £{earningsInPounds}</button>
+            <button onClick={handleWithdraw}>Withdraw £{earningsInPounds}</button>
           ) : (
             <p>
               Payouts unlock at £{threshold}.00 (Keep dropping those hits!)
