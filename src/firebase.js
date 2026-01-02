@@ -1,6 +1,6 @@
 
 import { initializeApp } from "firebase/app";
-import { getFirestore, writeBatch, doc, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp, increment } from "firebase/firestore";
+import { getFirestore, writeBatch, doc, onSnapshot, collection, setDoc, getDoc, deleteDoc, updateDoc, getDocs, serverTimestamp, increment } from "firebase/firestore";
 import { getStorage, ref, uploadBytes, getDownloadURL, deleteObject } from "firebase/storage";
 import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail } from "firebase/auth";
 import { query, where } from "firebase/firestore";

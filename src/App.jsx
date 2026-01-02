@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
 import './App.css'
-import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, updateLikeCount, getBoughtLikeCount, getFreeLikedByUserToday, getBoughtLikedByUserToday} from './firebase.js';
+import {registerWithEmail, loginWithEmail, signOutUser, subscribeAuth, sendPasswordReset, getRole, getArtistByUser, getLikeCount, updateLikeCount, getBoughtLikeCount, updateBoughtLikeCount, getFreeLikedByUserToday, getBoughtLikedByUserToday} from './firebase.js';
 import Contact from './contact.jsx';
 import Shop from './shop.jsx';
 import ArtistRegistration from './artist-registration.jsx';
@@ -168,7 +168,7 @@ function App() {
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
         <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
-        <Route path="/payment-success" element={<PaymentSuccess />} />
+        <Route path="/payment-success" element={<PaymentSuccess/>} />
       </Routes>
 
       {/* Auth UI */}
