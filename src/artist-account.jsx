@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { uploadImage, updateArtist } from './firebase.js';
+import GiftsPanel from './gifts-panel.jsx';
 
 export default function ArtistAccount({ myArtist }) {
     const [editMode, setEditMode] = useState(false);
@@ -75,6 +76,8 @@ export default function ArtistAccount({ myArtist }) {
                         <div style={{ marginTop: 12 }}>
                             <button onClick={() => setEditMode(true)}>Edit</button>
                         </div>
+                        <GiftsPanel artistData={myArtist} userId={myArtist.userId}/>
+
                     </>
                 ) : (
                     <>

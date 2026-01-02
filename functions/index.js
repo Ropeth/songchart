@@ -71,3 +71,39 @@ export const stripeWebhook = onRequest(
     res.json({ received: true });
   }
 );
+
+export const createConnectAccount = onRequest(
+  { cors: true, secrets: ["STRIPE_SECRET_KEY"] },
+  async (req, res) => {
+    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
+    const { userId, email } = req.body;
+
+    try {
+      // 1. Create the Express Account
+      const account = await stripe.accounts.create({
+        type: 'express',
+        email: email,
+        capabilities: {
+          transfers: { requested: true },
+        },
+      });
+
+      // 2. Save the Account ID to the Artist document
+      const artistRef = admin.firestore().collection("artists").doc(userId);
+      await artistRef.update({ stripeConnectId: account.id });
+
+      // 3. Create the Onboarding Link
+      const accountLink = await stripe.accountLinks.create({
+        account: account.id,
+        refresh_url: 'https://indybop.co.uk/artist-account', // URL if they refresh/fail
+        return_url: 'https://indybop.co.uk/artist-account', // URL when they finish
+        type: 'account_onboarding',
+      });
+
+      res.status(200).send({ url: accountLink.url });
+    } catch (error) {
+      console.error("Stripe Connect Error:", error);
+      res.status(500).send({ error: error.message });
+    }
+  }
+);

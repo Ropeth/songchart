@@ -68,4 +68,15 @@
   font-weight: bold;
   font-size: 0.85rem;
 }
+.artist-earnings{
+  border: 1px solid black;
+}
+.progress-outer{
+  background-color: #eee;
+  height:20px;
+}
+.progress{
+  background-color: #ef50aa;
+  height:100%;
+}
 
