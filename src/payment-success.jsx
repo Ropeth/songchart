@@ -21,8 +21,12 @@ export default function PaymentSuccess() {
           setStatus('confirmed');
         }
       }, (error) => {
-        // This catches the permission error specifically
-        console.error("Snapshot failed:", error);
+        // If we are logging out, ignore the permission error
+          if (error.code === 'permission-denied') {
+            console.log("Listener closed due to logout.");
+          } else {
+            console.error("Snapshot error:", error);
+          }
       });
 
       return () => snapUnsubscribe();
