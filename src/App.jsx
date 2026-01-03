@@ -116,7 +116,7 @@ function App() {
         {role != 'artist' && <><Link to="/artist-registration">Artist Registration</Link> |{" "}</>}
         {role === 'artist' && <><Link to="/artist-account">My Account</Link> |{" "}</>}
         {role === 'artist' && <><Link to="/manage-songs">Manage Songs</Link> |{" "}</>}
-        <Link to="/shop">Shop</Link> |{" "}
+        {currentUser && <><Link to="/shop">Shop</Link> |{" "}</>}
         <Link to="/contact">Contact</Link>
       </nav>
 
@@ -124,11 +124,11 @@ function App() {
       <Routes>
         <Route path="/" element={<Home userId={user?.uid} myFreeLikedSongsToday={myFreeLikedSongsToday} myBoughtLikedSongsToday={myBoughtLikedSongsToday} />} />
         <Route path="/about" element={<About />} />
-        <Route path="/artist-registration" element={<ArtistRegistration user={user} />} />
-        <Route path="/shop" element={<Shop userId={user?.uid} />} />
+        <Route path="/artist-registration" element={<ArtistRegistration setUser={setUser}/>} />
+        <Route path="/shop" element={<Shop />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/artist-account" element={<ArtistAccount myArtist={myArtist} />} />
-        <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} user={user} />} />
+        <Route path="/manage-songs" element={<ManageSongs myArtist={myArtist} />} />
         <Route path="/payment-success" element={<PaymentSuccess/>} />
       </Routes>
 

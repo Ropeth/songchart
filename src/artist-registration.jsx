@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import {subscribeAuth, fanToArtist, createArtist, uploadImage} from './firebase.js';
+import { useAuth } from "./AuthContext";
 
 
-
-export default function ArtistRegistration({role, user, setUser}) {
+export default function ArtistRegistration({setUser}) {
+    const { currentUser } = useAuth();
     const [artistName, setArtistName] = useState('');
     const [artistLocation, setArtistLocation] = useState('');
     const [artistImageUrl, setArtistImageUrl] = useState(''); // final uploaded URL
@@ -29,9 +30,9 @@ export default function ArtistRegistration({role, user, setUser}) {
     }, [artistImagePreview]);
 
 
-    useEffect(() => {
-      fetchRole();
-    }, [user]);
+    // useEffect(() => {
+    //   fetchRole();
+    // }, [user]);
 
   
     const upgradeToArtist = async (e) => {
@@ -42,13 +43,13 @@ export default function ArtistRegistration({role, user, setUser}) {
         let uploadedImageUrl = '';
         if (artistImageFile) {
           // upload to Firebase Storage
-          uploadedImageUrl = await uploadImage(artistImageFile, `artists/${user.uid}/${Date.now()}_${artistImageFile.name}`);
+          uploadedImageUrl = await uploadImage(artistImageFile, `artists/${currentUser?.uid}/${Date.now()}_${artistImageFile.name}`);
           setArtistImageUrl(uploadedImageUrl);
           setArtistImagePreview('');
         }
         // Note: createArtist expects (name, bio, location, imageUrl, uid)
-        await createArtist(artistName, artistBio, artistLocation, uploadedImageUrl, user.uid);
-        fetchRole();
+        await createArtist(artistName, artistBio, artistLocation, uploadedImageUrl, currentUser?.uid);
+        //fetchRole();
         alert('Your account has been upgraded to an artist account!');
       } catch (err) {
         console.error('Could not upgrade to artist', err);
@@ -62,17 +63,17 @@ export default function ArtistRegistration({role, user, setUser}) {
         <h1>Register as an artist</h1>
         <div style={{ marginBottom: 16 }}>
           {/* already an artist */}
-            {user ? (
-                role === 'artist' ? (
+            {currentUser ? (
+                currentUser?.role === 'artist' ? (
                 <div>
-                    <p>Hi <strong>{user.email}</strong></p>
+                    <p>Hi <strong>{currentUser?.email}</strong></p>
                     <p>You are already signed in as an artist.</p>
                     <Link to="/">Take me back to the chart.</Link>
                 </div>
                 ):(
                   <div>
                   {/* currently a signed-in fan */}
-                    <p>Hi <strong>{user.email}</strong></p>
+                    <p>Hi <strong>{currentUser?.email}</strong></p>
                     <p>You are currently signed in as a fan.</p>
                     <p>Would you like to upload your own songs? Complete the following info to upgrade to an artist account.</p>
                     <Link to="/">I don't want an artist account. Take me back to the chart.</Link>

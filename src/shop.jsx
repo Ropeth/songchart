@@ -2,13 +2,16 @@ import { useEffect, useState } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements } from '@stripe/react-stripe-js';
 import CheckoutForm from './checkout-form';
+import { useAuth } from "./AuthContext";
 
 
 // Replace with your actual Publishable Key from Stripe Dashboard
 const stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
 
-export default function Shop({ userId }) {
+export default function Shop() {
   const [clientSecret, setClientSecret] = useState('');
+  const { currentUser } = useAuth();
+
 
 useEffect(() => {
   // Get the URL from your environment variables
@@ -22,7 +25,7 @@ useEffect(() => {
   fetch(functionUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ userId: userId }),
+    body: JSON.stringify({ userId: currentUser?.uid }),
   })
     .then((res) => {
       if (!res.ok) {
@@ -32,7 +35,7 @@ useEffect(() => {
     })
     .then((data) => setClientSecret(data.clientSecret))
     .catch((err) => console.error("Fetch error:", err));
-}, [userId]);
+}, [currentUser?.uid]);
 
   const appearance = { theme: 'stripe' };
   const options = { clientSecret, appearance };
@@ -44,7 +47,7 @@ useEffect(() => {
       
       {clientSecret && (
         <Elements options={options} stripe={stripePromise}>
-          <CheckoutForm userId={userId} />
+          <CheckoutForm userId={currentUser?.uid} />
         </Elements>
       )}
     </div>

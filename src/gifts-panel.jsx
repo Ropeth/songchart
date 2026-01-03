@@ -2,6 +2,7 @@ export default function GiftsPanel ({ artistData, userId }){
   const earningsInPounds = (artistData.pendingEarnings / 100).toFixed(2);
   const threshold = 20;//change to 50 after a month
   const progress = (earningsInPounds / threshold) * 100;
+  //TODO: this doesn't update when earnings change or after withdrawal unless you refresh
 
   const handleSetupPayouts = async () => {
     // Get the URL from your environment variables
@@ -58,7 +59,7 @@ export default function GiftsPanel ({ artistData, userId }){
       </div>
       
       {!artistData.stripeConnectId ? (
-        <button onClick={handleSetupPayouts} className="mt-4 bg-blue-600 text-white p-2 rounded">
+        <button onClick={handleSetupPayouts}>
           Set up Bank Account (Stripe)
         </button>
       ) : (
