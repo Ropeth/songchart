@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import {subscribeAuth, fanToArtist, getRole, createArtist, uploadImage} from './firebase.js';
+import {subscribeAuth, fanToArtist, createArtist, uploadImage} from './firebase.js';
 
 
 
-export default function ArtistRegistration({role, setRole, user, setUser}) {
+export default function ArtistRegistration({role, user, setUser}) {
     const [artistName, setArtistName] = useState('');
     const [artistLocation, setArtistLocation] = useState('');
     const [artistImageUrl, setArtistImageUrl] = useState(''); // final uploaded URL
@@ -28,12 +28,6 @@ export default function ArtistRegistration({role, setRole, user, setUser}) {
       };
     }, [artistImagePreview]);
 
-    const fetchRole = async () => {
-        if (user) {
-            const userRole = await getRole(user.uid);
-            setRole(userRole);
-        }
-    };
 
     useEffect(() => {
       fetchRole();

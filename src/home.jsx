@@ -3,7 +3,8 @@ import {getAllSongs} from './firebase.js';
 
 import Song from './song.jsx';
 
-export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLikedSongsToday, myBoughtLikedSongsToday, boughtLikeCount}) {
+export default function Home({ 
+  myFreeLikedSongsToday, myBoughtLikedSongsToday}) {
   const [songs, setSongs] = useState([]); 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -36,7 +37,7 @@ export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLi
 
 
   useEffect(() => {
-    console.log("myBoughtLikedSongsToday", myBoughtLikedSongsToday);
+    //console.log("myBoughtLikedSongsToday", myBoughtLikedSongsToday);
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -66,18 +67,14 @@ export default function Home({userId, setLikeCount, setBoughtLikeCount, myFreeLi
           imageUrl={song.imageUrl ?? ''}
           artist={song.artist ?? 'Unknown artist'}
           artistId={song.artistId}
-          userId={userId}
           title={song.title ?? 'Unknown title'}
           isPlaying={playingSongId === song.id}
           onPlay={() => handlePlay(song.id)}
           onPause={() => handlePause(song.id)}
           registerAudioRef={(el) => registerAudioRef(song.id, el)}
-          setLikeCount={setLikeCount}
-          setBoughtLikeCount={setBoughtLikeCount}
           initialIsFreeLikedToday={!!myFreeLikedSongsToday[song.id]} 
           initialBoughtLikedToday={myBoughtLikedSongsToday[song.id]?.length ?? 0}          
           initialLikeId={myFreeLikedSongsToday[song.id] || null}
-          boughtLikeCount={boughtLikeCount}
           />
       ))}
       </>

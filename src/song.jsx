@@ -1,17 +1,31 @@
-
+import { increment } from "firebase/firestore";
 import { useEffect, useRef, useState } from 'react';
-import {getArtist, createPlay, updatePlay, getLikeCount, updateLikeCount, updateBoughtLikeCount, createLiked, createBoughtLiked, removeLiked} from './firebase.js';
+import {getArtist, createPlay, updatePlay, updateLikeCount, 
+  updateBoughtLikeCount, createLiked, createBoughtLiked, 
+  removeLiked} from './firebase.js';
+import { useAuth } from "./AuthContext";
 
-
-export default function Song({ id, userId, title, artist, artistId, audioUrl, imageUrl, isPlaying, onPlay, onPause, registerAudioRef, setLikeCount, setBoughtLikeCount, initialIsFreeLikedToday, initialBoughtLikedToday, initialLikeId, boughtLikeCount }) {
+export default function Song({ 
+  id, title, artist, artistId, audioUrl, imageUrl, 
+  isPlaying, onPlay, onPause, registerAudioRef, 
+  initialIsFreeLikedToday, initialBoughtLikedToday, 
+  initialLikeId}) {
   if (title == null) return <p>Song not found</p>;
-
+  
+  const { currentUser } = useAuth();
+  const likeCountRef = useRef(currentUser?.likeCount);
   const audioRef = useRef(null);
   const [timeStarted, setTimeStarted] = useState(0);
   const [currentPlayId, setCurrentPlayId] = useState(null);
   const [isFreeLikedToday, setIsFreeLikedToday] = useState(initialIsFreeLikedToday || false);
   const [boughtLikedToday, setBoughtLikedToday] = useState(initialBoughtLikedToday || 0);
   const [likeId, setLikeId] = useState(initialLikeId || null);
+  // Create a Ref to keep track of the count without triggering re-renders
+
+  // Keep the Ref in sync whenever the user data changes
+  useEffect(() => {
+    likeCountRef.current = currentUser?.likeCount;
+  }, [currentUser?.likeCount]);
 
   // Keep local liked state in sync if parent changes initialIsFreeLikedToday
   useEffect(() => {
@@ -33,7 +47,7 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
       // Create play and store its id (await the promise so we store the actual id)
       (async () => {
         try {
-          const playId = await createPlay(id, 0, userId);
+          const playId = await createPlay(id, 0, currentUser?.uid);
           setCurrentPlayId(playId);
         } catch (e) {
           console.error('Failed to create play:', e);
@@ -55,25 +69,23 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
 
   // Periodically update play duration every 10s while playing
   useEffect(() => {
-    if (!isPlaying || !timeStarted || !currentPlayId) return;
+    if (!isPlaying || !timeStarted || !currentPlayId || !currentUser?.uid) return;
+
     const intervalId = setInterval(() => {
-      const dur = (Date.now() - timeStarted)/1000;
-      //
-      if(dur % 60 >= 58 || dur % 60 <= 2){
-        getLikeCount(userId).then(likeCount => {
-          if(likeCount < 100){
-            console.log('Adding to like count for user', userId);
-            updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to add to like count:', err));
-            setLikeCount(likeCount + 1);
-          } else {
-            console.log('User', userId, 'has maxed out like count at', likeCount);
-          }
-        }).catch(err => console.error('Failed to get like count:', err));
+      const dur = (Date.now() - timeStarted) / 1000;
+      
+      // Check the REF instead of the STATE
+      if (dur % 60 >= 57 || dur % 60 <= 3) {
+        if (likeCountRef.current < 100) {
+          updateLikeCount(currentUser?.uid, increment(1));
+        }
       }
-      updatePlay(currentPlayId, dur).catch(err => console.error('Failed to periodically update play duration:', err));
+      
+      updatePlay(currentPlayId, dur).catch(err => console.error(err));
     }, 10000);
+
     return () => clearInterval(intervalId);
-  }, [isPlaying, timeStarted, currentPlayId]);
+  }, [isPlaying, timeStarted, currentPlayId, currentUser?.uid]);
 
   const [showModal, setShowModal] = useState(false);
   const [modalBio, setModalBio] = useState('');
@@ -113,56 +125,51 @@ export default function Song({ id, userId, title, artist, artistId, audioUrl, im
         </div>
       )}
       <button onClick={() => {
+        if (!currentUser?.uid) {
+          alert("You must be logged in to like songs!");
+          return;
+        }
         if (isFreeLikedToday) {
           if (!likeId) {
             console.warn('No likeId to remove.');
             return;
           }
             //give user a like back, take it from the song
-            getLikeCount(userId).then(likeCount => {
-
             removeLiked(likeId).then(() => {
               setIsFreeLikedToday(false);
               setLikeId(null);
-              updateLikeCount(userId, likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
-              setLikeCount(likeCount + 1); 
+              updateLikeCount(currentUser?.uid, currentUser.likeCount + 1).catch(err => console.error('Failed to increment like count:', err));
             }).catch(err => {
               console.error('Failed to unlike song:', err);
               alert('Failed to unlike song.');
             });
-          }).catch(err => console.error('Failed to get like count:', err));
         } else {
           
-          getLikeCount(userId).then(likeCount => {
             //take away a like from user, give it to the song
-            if(likeCount <= 0){
+            if(currentUser.likeCount <= 0){
               alert('You do not have enough likes to like this song.');
               return;
             } 
-            createLiked(id, userId).then((newLikeId) => {
+            createLiked(id, currentUser?.uid).then((newLikeId) => {
               setIsFreeLikedToday(true);
               setLikeId(newLikeId);
-              console.log('decrementing like count for user', userId);
-              updateLikeCount(userId, likeCount - 1).catch(err => console.error('Failed to decrement like count:', err));
-              setLikeCount(likeCount - 1);                
+              console.log('decrementing like count for user', currentUser?.uid);
+              updateLikeCount(currentUser?.uid, currentUser.likeCount - 1).catch(err => console.error('Failed to decrement like count:', err));
             }).catch(err => {
               console.error('Failed to like song:', err);
               alert('Failed to like song.');
             });      
-          }).catch(err => console.error('Failed to get like count:', err));
         }
       }}
       >
         {isFreeLikedToday ? '❤️' : '🤍'}
       </button>
       <button onClick={()=>{
-        if(boughtLikeCount > 0){
-          let newBoughtlikeCount = boughtLikeCount - 1;
+        if(currentUser?.boughtLikesBalance > 0){
           let newBoughtLikedToday = boughtLikedToday + 1;
-          setBoughtLikeCount(newBoughtlikeCount);
           setBoughtLikedToday(newBoughtLikedToday);
-          updateBoughtLikeCount(userId, newBoughtlikeCount);
-          createBoughtLiked(id, userId);
+          updateBoughtLikeCount(currentUser?.uid, increment(-1));
+          createBoughtLiked(id, currentUser?.uid);
         }
       }}>
         {boughtLikedToday}
