@@ -91,22 +91,24 @@ export default function ArtistAccount({ myArtist }) {
                             <select value={location} onChange={(e) => setLocation(e.target.value)}>
                             <option value="">--Select County--</option>
                             <optgroup label="England">
-                                <option>Avon</option>
                                 <option>Bedfordshire</option>
                                 <option>Berkshire</option>
+                                <option>Bristol</option>
                                 <option>Buckinghamshire</option>
                                 <option>Cambridgeshire</option>
                                 <option>Cheshire</option>
-                                <option>Cleveland</option>
                                 <option>Cornwall</option>
                                 <option>County Durham</option>
                                 <option>Cumbria</option>
                                 <option>Derbyshire</option>
                                 <option>Devon</option>
                                 <option>Dorset</option>
+                                <option>East Riding of Yorkshire</option>
                                 <option>East Sussex</option>
                                 <option>Essex</option>
                                 <option>Gloucestershire</option>
+                                <option>Greater London</option>
+                                <option>Greater Manchester</option>
                                 <option>Hampshire</option>
                                 <option>Herefordshire</option>
                                 <option>Hertfordshire</option>
@@ -117,17 +119,18 @@ export default function ArtistAccount({ myArtist }) {
                                 <option>Lincolnshire</option>
                                 <option>London</option>
                                 <option>Merseyside</option>
-                                <option>Middlesex</option>
                                 <option>Norfolk</option>
+                                <option>North Somerset</option>
                                 <option>North Humberside</option>
                                 <option>North Yorkshire</option>
                                 <option>Northamptonshire</option>
                                 <option>Northumberland</option>
                                 <option>Nottinghamshire</option>
                                 <option>Oxfordshire</option>
+                                <option>Rutland</option>
                                 <option>Shropshire</option>
                                 <option>Somerset</option>
-                                <option>South Humberside</option>
+                                <option>South Gloucestershire</option>
                                 <option>South Yorkshire</option>
                                 <option>Staffordshire</option>
                                 <option>Suffolk</option>
@@ -143,76 +146,68 @@ export default function ArtistAccount({ myArtist }) {
                             <optgroup label="Scotland">
                                 <option>Aberdeenshire</option>
                                 <option>Angus</option>
-                                <option>Argyll</option>
+                                <option>Argyll and Bute</option>
                                 <option>Ayrshire</option>
                                 <option>Banffshire</option>
                                 <option>Berwickshire</option>
                                 <option>Caithness</option>
                                 <option>Clackmannanshire</option>
-                                <option>Dumfriesshire</option>
-                                <option>Dunbartonshire</option>
+                                <option>Dumfries and Galloway</option>
+                                <option>East Ayrshire</option>
+                                <option>East Dunbartonshire</option>
                                 <option>East Lothian</option>
+                                <option>East Renfrewshire</option>
                                 <option>Fife</option>
-                                <option>Inverness-shire</option>
-                                <option>Isle of Arran</option>
-                                <option>Isle of Barra</option>
-                                <option>Isle of Benbecula</option>
-                                <option>Isle of Bute</option>
-                                <option>Isle of Canna</option>
-                                <option>Isle of Coll</option>
-                                <option>Isle of Colonsay</option>
-                                <option>Isle of Cumbrae</option>
-                                <option>Isle of Eigg</option>
-                                <option>Isle of Gigha</option>
-                                <option>Isle of Harris</option>
-                                <option>Isle of Iona</option>
-                                <option>Isle of Islay</option>
-                                <option>Isle of Jura</option>
-                                <option>Isle of Lewis</option>
-                                <option>Isle of Mull</option>
-                                <option>Isle of North Uist</option>
-                                <option>Isle of Rhum</option>
-                                <option>Isle of Scalpay</option>
-                                <option>Isle of Skye</option>
-                                <option>Isle of South Uist</option>
-                                <option>Isle of Tiree</option>
+                                <option>Highland</option>
+                                <option>Inverclyde</option>
                                 <option>Kincardineshire</option>
-                                <option>Kinross-shire</option>
-                                <option>Kirkcudbrightshire</option>
                                 <option>Lanarkshire</option>
                                 <option>Midlothian</option>
-                                <option>Morayshire</option>
-                                <option>Nairnshire</option>
+                                <option>Moray</option>
+                                <option>North Ayrshire</option>
+                                <option>North Lanarkshire</option>
                                 <option>Orkney</option>
-                                <option>Peeblesshire</option>
-                                <option>Perthshire</option>
+                                <option>Perth and Kinross</option>
                                 <option>Renfrewshire</option>
-                                <option>Ross-shire</option>
-                                <option>Roxburghshire</option>
-                                <option>Selkirkshire</option>
+                                <option>Scottish Borders</option>
                                 <option>Shetland</option>
+                                <option>South Ayrshire</option>
                                 <option>Stirlingshire</option>
-                                <option>Sutherland</option>
+                                <option>West Dunbartonshire</option>
                                 <option>West Lothian</option>
-                                <option>Wigtownshire</option>
+                                <option>Western Isles</option>
                             </optgroup>
                             <optgroup label="Wales">
-                                <option>Clwyd</option>
-                                <option>Dyfed</option>
-                                <option>Gwent</option>
+                                <option>Blaenau Gwent</option>
+                                <option>Bridgend</option>
+                                <option>Caerphilly</option>
+                                <option>Cardiff</option>
+                                <option>Carmarthenshire</option>
+                                <option>Ceredigion</option>
+                                <option>Conwy</option>
+                                <option>Denbighshire</option>
+                                <option>Flintshire</option>
                                 <option>Gwynedd</option>
-                                <option>Mid Glamorgan</option>
-                                <option>South Glamorgan</option>
+                                <option>Isle of Anglesey</option>
+                                <option>Merthyr Tydfil</option>
+                                <option>Monmouthshire</option>
+                                <option>Neath Port Talbot</option>
+                                <option>Newport</option>
+                                <option>Pembrokeshire</option>
                                 <option>Powys</option>
-                                <option>West Glamorgan</option>
+                                <option>Rhondda Cynon Taff</option>
+                                <option>Swansea</option>
+                                <option>Torfaen</option>
+                                <option>Vale of Glamorgan</option>
+                                <option>Wrexham</option>
                             </optgroup>
                             <optgroup label="Northern Ireland">
-                                <option>County Antrim</option>
-                                <option>County Armagh</option>
+                                <option>Antrim</option>
+                                <option>Armagh</option>
                                 <option>County Down</option>
-                                <option>County Fermanagh</option>
-                                <option>County Londonderry</option>
-                                <option>County Tyrone</option>
+                                <option>Fermanagh</option>
+                                <option>Londonderry</option>
+                                <option>Tyrone</option>
                             </optgroup>
                             </select>
                         </label>
